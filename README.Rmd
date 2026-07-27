@@ -1,0 +1,57 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# fancygam
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/chross22/fancygam/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/chross22/fancygam/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
+The goal of this package is to add flexibility when plotting GAMs created using mgcv.
+
+## Installation
+
+You can install the development version of fancygam from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("chross22/fancygam")
+```
+
+## Example
+
+Here is a very basic example of a use of fancygam, using the iris data set available in R. 
+
+```{r fancygam1}
+library(fancygam)
+
+# Use Iris dataset
+head(iris)
+
+# Create example GAM using iris data
+model <- mgcv::gam(Petal.Length ~ s(Sepal.Length) + s(Petal.Width), data = iris)
+
+# Plot sepal length partial effects 
+combinePlots(model, iris, vars = c("Sepal.Length"))
+```
+
+We can also plot multiple model terms next to one another using fancygam.
+
+```{r fancygam2}
+# Plot both sepal length and petal width partial effects
+combinePlots(model, iris, vars = c("Sepal.Length", "Petal.Width"))
+  
+```
+
