@@ -1,0 +1,19 @@
+Package: fancygam
+Title: Increased Flexibility For Plotting GAMs
+Version: 0.0.0.9000
+Authors@R: 
+    person("Camille", "Ross", email = "camille.ross@maine.edu", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-1428-2294"))
+Description: This package provides increased flexibility when plotting GAMs, including improved options for representing the data rugs, control over individual smooths, and the option to plot factor-smooth interactions alongside one another.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports:
+    ggplot2,
+    ggpubr,
+    gratia (>= 0.9.0),
+    patchwork,
+    testthat
+Suggests:
+     rlang
