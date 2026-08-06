@@ -7,9 +7,19 @@ make_test_gam <- function() {
   mgcv::gam(y ~ s(x1), data = dat)
 }
 
+# The data the fixture was fitted on, for the rug beneath each smooth.
+test_gam_data <- function() {
+  set.seed(1)
+  data.frame(x1 = runif(100, 1, 10))
+}
+
+# plotSmooths() returns a rug stacked above a smooth. The smooth is the one
+# carrying the labels and the mapping.
+smooth_panel <- function(p) p[[2]]
+
 test_that("plotSmooths returns a ggplot object", {
   model <- make_test_gam()
-  p <- plotSmooths(model, "x1", xlab = "X1")
+  p <- plotSmooths(model, test_gam_data(), "x1", xlab = "X1")
   expect_s3_class(p, "ggplot")
 })
 
@@ -17,24 +27,24 @@ test_that("plotSmooths errors on an unknown transform", {
   # Same lazy-aes() reasoning as plotRugs -- force a build to trigger stop().
   model <- make_test_gam()
   expect_error(
-    ggplot2::ggplot_build(plotSmooths(model, "x1", xlab = "X1", transform = "invalid")),
+    ggplot2::ggplot_build(plotSmooths(model, test_gam_data(), "x1", xlab = "X1", transform = "invalid")),
     "Unknown transformation requested"
   )
 })
 
 test_that("plotSmooths applies xlab/ylab labels correctly", {
   model <- make_test_gam()
-  p <- plotSmooths(model, "x1", xlab = "My X", ylab = "My Y")
+  p <- plotSmooths(model, test_gam_data(), "x1", xlab = "My X", ylab = "My Y")
 
-  expect_equal(p$labels$x, "My X")
-  expect_equal(p$labels$y, "My Y")
+  expect_equal(smooth_panel(p)$labels$x, "My X")
+  expect_equal(smooth_panel(p)$labels$y, "My Y")
 })
 
 test_that("plotSmooths uses the default ylab when not supplied", {
   model <- make_test_gam()
-  p <- plotSmooths(model, "x1", xlab = "X1")
+  p <- plotSmooths(model, test_gam_data(), "x1", xlab = "X1")
 
-  expect_equal(p$labels$y, "Partial Effect")
+  expect_equal(smooth_panel(p)$labels$y, "Partial Effect")
 })
 
 test_that("plotSmooths applies the requested transform to the smooth term", {
@@ -43,11 +53,11 @@ test_that("plotSmooths applies the requested transform to the smooth term", {
     model, select = "x1", dist = 0.1, partial_match = TRUE
   )
 
-  p_none <- plotSmooths(model, "x1", xlab = "X1", transform = "none")
-  p_log  <- plotSmooths(model, "x1", xlab = "X1", transform = "log")
+  p_none <- plotSmooths(model, test_gam_data(), "x1", xlab = "X1", transform = "none")
+  p_log  <- plotSmooths(model, test_gam_data(), "x1", xlab = "X1", transform = "log")
 
-  mapped_none <- rlang::eval_tidy(p_none$mapping$x, smooth_est)
-  mapped_log  <- rlang::eval_tidy(p_log$mapping$x, smooth_est)
+  mapped_none <- rlang::eval_tidy(smooth_panel(p_none)$mapping$x, smooth_est)
+  mapped_log  <- rlang::eval_tidy(smooth_panel(p_log)$mapping$x, smooth_est)
 
   expect_equal(mapped_none, smooth_est$x1)
   expect_equal(mapped_log, log(smooth_est$x1))
@@ -60,8 +70,23 @@ test_that("plotSmooths does not clip the y-axis to a fixed range", {
   # this confirms the plot's panel range now reflects the actual data
   # rather than a fixed, model-specific window.
   model <- make_test_gam()
-  built <- ggplot2::ggplot_build(plotSmooths(model, "x1", xlab = "X1"))
+  built <- ggplot2::ggplot_build(
+    smooth_panel(plotSmooths(model, test_gam_data(), "x1", xlab = "X1"))
+  )
   panel_range <- built$layout$panel_params[[1]]$y.range
 
   expect_false(isTRUE(all.equal(panel_range, c(-10, 5))))
+})
+
+test_that("xlab defaults to the variable's own name", {
+  model <- make_test_gam()
+  p <- plotSmooths(model, test_gam_data(), "x1")
+
+  expect_equal(smooth_panel(p)$labels$x, "x1")
+})
+
+test_that("an unknown rug type is refused before anything is drawn", {
+  model <- make_test_gam()
+  expect_error(plotSmooths(model, test_gam_data(), "x1", rug.type = "violin"),
+               "Unknown type requested")
 })

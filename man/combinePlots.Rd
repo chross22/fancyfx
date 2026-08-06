@@ -2,19 +2,37 @@
 % Please edit documentation in R/combinePlots.R
 \name{combinePlots}
 \alias{combinePlots}
-\title{Combine plot of smooth and plot of data rugs}
+\title{Combine multiple smooth plots for simultaneous display}
 \usage{
-combinePlots(model, dat, vars, title = "")
+combinePlots(
+  model,
+  dat,
+  vars,
+  title = "",
+  var.transform = c("none", "log", "log10", "sqrt"),
+  rug.type = c("histogram", "density"),
+  bins = 30
+)
 }
 \arguments{
 \item{model}{GAM produced using mgcv}
 
-\item{dat}{Raw data}
+\item{dat}{Raw data the model was fitted on}
 
 \item{vars}{Variables of interest}
 
 \item{title}{Plot title, optional}
+
+\item{var.transform}{How to transform the variables before plotting. One
+value used for every variable, or one per entry in \code{vars}.}
+
+\item{rug.type}{Type of rug plot to draw beneath each smooth}
+
+\item{bins}{Number of bins for a histogram rug}
+}
+\value{
+The arranged smooth plots
 }
 \description{
-Combine plot of smooth and plot of data rugs
+Combine multiple smooth plots for simultaneous display
 }

@@ -6,25 +6,38 @@
 \usage{
 plotSmooths(
   model,
+  dat,
   var,
-  xlab,
+  xlab = var,
   ylab = "Partial Effect",
-  transform = c("none", "log", "log10", "sqrt")[1]
+  transform = c("none", "log", "log10", "sqrt"),
+  rug.type = c("histogram", "density"),
+  bins = 30
 )
 }
 \arguments{
 \item{model}{GAM produced using mgcv}
 
+\item{dat}{Raw data used to fit the model, for the accompanying rug plot.
+It must be the data the model was \emph{fitted} on: \code{gratia} reports smooths in
+the model's own units, so a rug drawn from differently scaled data would sit
+on a different x axis than the smooth above it.}
+
 \item{var}{Variable smooths to extract}
 
-\item{xlab}{Label for x-axis of smooth plot, describing var with units where applicable}
+\item{xlab}{Label for the x-axis, describing var with units where applicable.
+Defaults to the variable's own name.}
 
 \item{ylab}{Label for y-axis of smooth plot; default is "Partial Effect"}
 
 \item{transform}{Optional parameter indicating how to transform the variable, if applicable}
+
+\item{rug.type}{Type of rug plot to draw beneath the smooth}
+
+\item{bins}{Number of bins for a histogram rug}
 }
 \value{
-The rug plot from dat for var
+A smooth plot for var with its rug plot beneath it
 }
 \description{
 Extract and plot smooths from generalized additive model created using mgcv::gam()

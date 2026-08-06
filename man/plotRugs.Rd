@@ -4,18 +4,31 @@
 \alias{plotRugs}
 \title{Create rug plots representing distribution of the raw data}
 \usage{
-plotRugs(dat, var, transform = c("none", "log", "log10", "sqrt")[1])
+plotRugs(
+  dat,
+  var,
+  type = c("histogram", "density"),
+  transform = c("none", "log", "log10", "sqrt"),
+  bins = 30
+)
 }
 \arguments{
 \item{dat}{Raw data}
 
 \item{var}{Variable to plot}
 
+\item{type}{Optional parameter indicating type of plot; default is histogram}
+
 \item{transform}{Optional parameter indicating how to transform the variable, if applicable}
+
+\item{bins}{Number of histogram bins. Set explicitly rather than left to
+\code{geom_histogram()}'s default, which is the same 30 but emits a message
+about it on every plot. Ignored when \code{type} is \code{"density"}.}
 }
 \value{
 The rug plot from dat for var
 }
 \description{
-Create rug plots representing distribution of the raw data
+The companion to a smooth plot: it shows where the data actually is, so a
+bend in a smooth can be read against how much evidence sits under it.
 }
