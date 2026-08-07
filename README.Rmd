@@ -55,3 +55,9 @@ combinePlots(model, iris, vars = c("Sepal.Length", "Petal.Width"))
   
 ```
 
+
+## Citing fancygam
+
+```r
+citation("fancygam")
+```

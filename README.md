@@ -57,3 +57,9 @@ combinePlots(model, iris, vars = c("Sepal.Length", "Petal.Width"))
 ```
 
 <img src="man/figures/README-fancygam2-1.png" width="100%" />
+
+## Citing fancygam
+
+``` r
+citation("fancygam")
+```
