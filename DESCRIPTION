@@ -10,6 +10,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports:
     ggplot2,
+    mgcv,
     ggpubr,
     gratia (>= 0.9.0),
     patchwork,
