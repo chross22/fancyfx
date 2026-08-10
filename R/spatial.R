@@ -110,7 +110,28 @@ ensemble_summary <- function(x, statistic = c("sd", "cv", "range", "iqr",
 #' report it as similar. Treat a non-negative surface as the absence of one
 #' specific problem, not as a licence to project.
 #'
-#' @return A single-layer `SpatRaster` named `mess`. Negative values are novel.
+#' @section Which covariate is responsible:
+#' The surface says a cell is novel; `limiting = TRUE` says what made it so.
+#' That is usually the actionable half -- "this shelf is extrapolated" is a
+#' shrug, "extrapolated because its chlorophyll is higher than any training
+#' record" is a decision about whether to widen the training window or clip the
+#' map. It names the covariate with the lowest similarity, which is the one the
+#' minimum was taken from.
+#'
+#' @section Rasters and data frames:
+#' `x` may be a `SpatRaster` of covariate layers or a plain data frame of
+#' covariate columns, and the return follows the input. The data frame form is
+#' for pipelines that hold their projection as a table of cells rather than as a
+#' raster, which is common enough that requiring a round trip through `terra`
+#' to score it would be a tax rather than a service.
+#'
+#' @param limiting Whether to also report the covariate responsible for each
+#'   cell's score. `FALSE` by default, so the returned shape is unchanged.
+#'
+#' @return For a `SpatRaster`, a `SpatRaster` named `mess`, gaining a
+#'   categorical `mess_variable` layer when `limiting = TRUE`. For a data frame,
+#'   a data frame with a `mess` column and, when `limiting = TRUE`, a
+#'   `mess_variable` column. Negative values are novel.
 #'
 #' @family spatial plots
 #' @seealso [plotExtrapolation()] to draw it, [ensemble_summary()] for
@@ -137,37 +158,97 @@ ensemble_summary <- function(x, statistic = c("sd", "cv", "range", "iqr",
 #' }
 #'
 #' @export
-mess <- function(x, training, vars = NULL) {
-  require_terra()
-  if (!inherits(x, "SpatRaster")) {
-    stop("x must be a SpatRaster of covariates, not a <",
+mess <- function(x, training, vars = NULL, limiting = FALSE) {
+  raster <- inherits(x, "SpatRaster")
+  if (!raster && !is.data.frame(x)) {
+    stop("x must be a SpatRaster or a data frame of covariates, not a <",
          paste(class(x), collapse = "/"), ">.", call. = FALSE)
   }
+  if (raster) require_terra()
 
   training <- training_frame(training)
+  vars <- mess_vars(x, training, vars, raster)
 
-  if (is.null(vars)) vars <- intersect(names(x), names(training))
-  if (!length(vars)) {
-    stop("No covariates in common between the raster (",
-         paste(names(x), collapse = ", "), ") and the training data (",
-         paste(names(training), collapse = ", "), ").", call. = FALSE)
-  }
-  missing.vars <- setdiff(vars, names(x))
-  if (length(missing.vars)) {
-    stop("Raster has no layer(s): ", paste(missing.vars, collapse = ", "),
-         call. = FALSE)
-  }
-
-  layers <- lapply(vars, function(v) {
+  references <- lapply(vars, function(v) {
     reference <- stats::na.omit(training[[v]])
     if (!length(reference)) {
       stop("Training data for '", v, "' is entirely missing.", call. = FALSE)
     }
-    terra::app(x[[v]], function(p) mess_similarity(p, reference))
+    reference
+  })
+  names(references) <- vars
+
+  if (!raster) return(mess_frame(x, references, vars, limiting))
+
+  layers <- lapply(vars, function(v) {
+    terra::app(x[[v]], function(p) mess_similarity(p, references[[v]]))
   })
 
   out <- Reduce(function(a, b) min(a, b), layers)
   names(out) <- "mess"
+  if (!limiting) return(out)
+
+  # which.min over the layers, as a categorical layer carrying the names. A
+  # raster cannot hold a character, so the codes are the levels table.
+  stacked <- Reduce(c, layers)
+  worst <- terra::which.min(stacked)
+  levels(worst) <- data.frame(value = seq_along(vars), mess_variable = vars)
+  names(worst) <- "mess_variable"
+  c(out, worst)
+}
+
+#' The covariates a MESS surface can be built from
+#'
+#' @param x A `SpatRaster` or data frame of covariates.
+#' @param training Training data.
+#' @param vars Requested covariates, or `NULL` for the ones in common.
+#' @param raster Whether `x` is a raster, for the error wording.
+#' @return A character vector of covariate names.
+#' @keywords internal
+mess_vars <- function(x, training, vars, raster) {
+  available <- names(x)
+  if (is.null(vars)) vars <- intersect(available, names(training))
+
+  if (!length(vars)) {
+    stop("No covariates in common between the ",
+         if (raster) "raster (" else "data (",
+         paste(available, collapse = ", "), ") and the training data (",
+         paste(names(training), collapse = ", "), ").", call. = FALSE)
+  }
+  missing.vars <- setdiff(vars, available)
+  if (length(missing.vars)) {
+    stop(if (raster) "Raster has no layer(s): " else "Data has no column(s): ",
+         paste(missing.vars, collapse = ", "), call. = FALSE)
+  }
+  vars
+}
+
+#' MESS over a data frame of cells
+#'
+#' @param x A data frame of covariates.
+#' @param references Training values per covariate.
+#' @param vars Covariate names.
+#' @param limiting Whether to name the covariate responsible.
+#' @return A data frame with `mess` and optionally `mess_variable`.
+#' @keywords internal
+mess_frame <- function(x, references, vars, limiting = FALSE) {
+  similarity <- vapply(vars, function(v) {
+    mess_similarity(x[[v]], references[[v]])
+  }, numeric(nrow(x)))
+
+  # vapply drops to a plain vector for a single row, which then indexes as if
+  # it were one column of many.
+  similarity <- matrix(similarity, nrow = nrow(x),
+                       dimnames = list(NULL, vars))
+
+  out <- data.frame(mess = apply(similarity, 1, min, na.rm = FALSE))
+  if (!limiting) return(out)
+
+  worst <- apply(similarity, 1, function(row) {
+    if (all(is.na(row))) return(NA_integer_)
+    which.min(row)
+  })
+  out$mess_variable <- ifelse(is.na(worst), NA_character_, vars[worst])
   out
 }
 

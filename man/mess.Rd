@@ -4,7 +4,7 @@
 \alias{mess}
 \title{Multivariate environmental similarity surface}
 \usage{
-mess(x, training, vars = NULL)
+mess(x, training, vars = NULL, limiting = FALSE)
 }
 \arguments{
 \item{x}{A \code{SpatRaster} of covariates to project onto. Layer names must
@@ -14,9 +14,15 @@ match the columns of \code{training}.}
 on, or a fitted model to take them from.}
 
 \item{vars}{Covariates to consider. Defaults to those common to both.}
+
+\item{limiting}{Whether to also report the covariate responsible for each
+cell's score. \code{FALSE} by default, so the returned shape is unchanged.}
 }
 \value{
-A single-layer \code{SpatRaster} named \code{mess}. Negative values are novel.
+For a \code{SpatRaster}, a \code{SpatRaster} named \code{mess}, gaining a
+categorical \code{mess_variable} layer when \code{limiting = TRUE}. For a data frame,
+a data frame with a \code{mess} column and, when \code{limiting = TRUE}, a
+\code{mess_variable} column. Negative values are novel.
 }
 \description{
 Where does a projection leave the conditions the model was fitted under?
@@ -39,6 +45,25 @@ separately and still be somewhere the model has never seen, and MESS will
 report it as similar. Treat a non-negative surface as the absence of one
 specific problem, not as a licence to project.
 }
+\section{Which covariate is responsible}{
+
+The surface says a cell is novel; \code{limiting = TRUE} says what made it so.
+That is usually the actionable half -- "this shelf is extrapolated" is a
+shrug, "extrapolated because its chlorophyll is higher than any training
+record" is a decision about whether to widen the training window or clip the
+map. It names the covariate with the lowest similarity, which is the one the
+minimum was taken from.
+}
+
+\section{Rasters and data frames}{
+
+\code{x} may be a \code{SpatRaster} of covariate layers or a plain data frame of
+covariate columns, and the return follows the input. The data frame form is
+for pipelines that hold their projection as a table of cells rather than as a
+raster, which is common enough that requiring a round trip through \code{terra}
+to score it would be a tax rather than a service.
+}
+
 \examples{
 if (requireNamespace("terra", quietly = TRUE)) {
   set.seed(1)
