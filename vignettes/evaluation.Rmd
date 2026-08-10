@@ -231,6 +231,29 @@ The spread across folds is the part worth reading. If the AUC range is wide, or
 the TSS-maximising cutoff moves substantially between folds, then reporting a
 single threshold to three decimal places is false precision.
 
+## Deviance
+
+AUC only cares about ranking, so it cannot see predictions that are ordered
+correctly and still wrong. Deviance can, and it penalises confident mistakes
+hardest — usually the failure that matters.
+
+```{r deviance}
+predicted <- predict(sdm, test, type = "response")
+
+fitted.deviance <- calc_deviance(test$y, predicted, "binomial")
+null.deviance <- calc_deviance(test$y, rep(mean(test$y), nrow(test)),
+                               "binomial")
+
+# Proportion of deviance explained
+1 - fitted.deviance / null.deviance
+```
+
+It is most useful as a relative measure. Against the null deviance — what you
+would get predicting the overall mean for everything — the ratio is the
+proportion of deviance explained, the number boosted-regression-tree work
+reports as a matter of course. `family` also takes `"poisson"`, `"gaussian"`
+and `"laplace"`, so it is not restricted to presence/absence.
+
 ## How independent is the hold-out, really?
 
 Everything above assumes the evaluation data tells you something the training
@@ -284,6 +307,16 @@ means the model was relying on it more.
 It is model-agnostic — it needs nothing but the ability to predict — so a GAM, a
 GLM, a mixed model and a Bayesian fit all give numbers that mean the same thing
 and can be compared.
+
+`permutation_importance()` gives the numbers behind the plot — one row per
+variable per permutation, so you can summarise them your own way:
+
+```{r importance-numbers}
+imp <- permutation_importance(sdm, test, n.perm = 20)
+
+aggregate(.importance ~ .variable, data = imp, FUN = mean)
+attr(imp, "metric")
+```
 
 The point is drawn at the mean and the line spans the permutations. The **spread
 is the point**: a variable whose range crosses the dashed zero line did no
