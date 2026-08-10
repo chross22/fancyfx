@@ -76,7 +76,9 @@ disagreement between ensemble members.
 
 Other spatial plots:
 \code{\link[=ensemble_summary]{ensemble_summary()}},
+\code{\link[=hex_bin]{hex_bin()}},
 \code{\link[=mess]{mess()}},
+\code{\link[=plotHexbin]{plotHexbin()}},
 \code{\link[=plotUncertainty]{plotUncertainty()}}
 }
 \concept{spatial plots}

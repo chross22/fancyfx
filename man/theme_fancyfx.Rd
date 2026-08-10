@@ -8,7 +8,15 @@ theme_fancyfx(
   base_size = 12,
   base_family = "",
   legend = "right",
-  border = FALSE
+  border = FALSE,
+  axis.title.size = NULL,
+  axis.text.size = NULL,
+  title.size = NULL,
+  subtitle.size = NULL,
+  caption.size = NULL,
+  legend.title.size = NULL,
+  legend.text.size = NULL,
+  strip.text.size = NULL
 )
 }
 \arguments{
@@ -24,6 +32,17 @@ chooses; set it to match a manuscript's font.}
 
 \item{border}{Whether to draw a full box around the panel rather than only
 the left and bottom axis lines.}
+
+\item{axis.title.size, axis.text.size}{Size of the axis titles and of the
+numbers along the axes.}
+
+\item{title.size, subtitle.size, caption.size}{Size of the plot title,
+subtitle and caption.}
+
+\item{legend.title.size, legend.text.size}{Size of the legend title and of
+its entries.}
+
+\item{strip.text.size}{Size of facet strip labels.}
 }
 \value{
 A \pkg{ggplot2} theme object.
@@ -34,14 +53,33 @@ targets the conventions journals tend to expect: no background panel, no
 grid, plain black axis lines, and text large enough to survive being shrunk
 into a column.
 }
+\section{Sizing text}{
+
+Raising \code{base_size} scales every element at once, keeping their relative
+sizes balanced, and is usually all that is needed. Each element also takes
+its own argument for the cases where it is not: a long axis title that needs
+to be smaller than the numbers beside it, or a journal that specifies a size
+for one thing and not the rest. Anything left \code{NULL} follows \code{base_size}.
+
+Panel labels -- the \code{A}, \code{B}, \code{C} on a multi-panel figure -- are drawn by the
+arranging step rather than the theme, so they have their own \code{label.size}
+argument on \code{\link[=combinePlots]{combinePlots()}} and \code{\link[=comparePlots]{comparePlots()}}.
+}
+
 \examples{
 fit <- lm(Petal.Length ~ Sepal.Length, data = iris)
 
 # The default
 plotEffects(fit, iris, "Sepal.Length")
 
-# Larger text for a narrow, two-column figure
-plotEffects(fit, iris, "Sepal.Length", theme = theme_fancyfx(base_size = 14))
+# Everything larger, for a narrow two-column figure
+plotEffects(fit, iris, "Sepal.Length", theme = theme_fancyfx(base_size = 16))
+
+# Or one element at a time
+plotEffects(fit, iris, "Sepal.Length",
+            theme = theme_fancyfx(base_size = 14,
+                                  axis.title.size = 18,
+                                  axis.text.size = 11))
 
 # Or hand it any other ggplot2 theme
 plotEffects(fit, iris, "Sepal.Length", theme = ggplot2::theme_minimal())

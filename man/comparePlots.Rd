@@ -20,6 +20,8 @@ comparePlots(
   bins = 30,
   common.legend = TRUE,
   labels = "A",
+  label.size = 14,
+  title.size = 14,
   ...
 )
 }
@@ -64,6 +66,13 @@ would then describe only the first.}
 \item{labels}{Panel labels: \code{"A"} (the default) for upper-case letters, \code{"a"}
 for lower-case, \code{"1"} for numbers, \code{"none"} for none, or a character vector
 used verbatim, one per panel.}
+
+\item{label.size}{Font size of the panel labels. These are drawn by the
+arranging step rather than by the theme, so they do not follow
+\code{base_size} and have to be set here.}
+
+\item{title.size}{Font size of the overall figure title, for the same
+reason.}
 
 \item{...}{Passed through to \code{\link[=plotEffects]{plotEffects()}} and on to the backend.}
 }

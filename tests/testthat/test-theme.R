@@ -111,3 +111,62 @@ test_that("both rug types are filled, so they read with the same weight", {
     expect_true(all(built$data[[1]]$fill == "grey35"), info = type)
   }
 })
+
+test_that("base_size scales every text element together", {
+  small <- theme_fancyfx(base_size = 10)
+  large <- theme_fancyfx(base_size = 20)
+
+  for (element in c("axis.title", "axis.text", "plot.title", "plot.caption",
+                    "legend.title", "legend.text")) {
+    expect_gt(large[[element]]$size, small[[element]]$size, label = element)
+  }
+})
+
+test_that("each element can be sized on its own", {
+  # For the cases base_size cannot cover: a long axis title that must be
+  # smaller than the numbers beside it, or a journal specifying one size.
+  th <- theme_fancyfx(base_size = 14, axis.title.size = 20,
+                      axis.text.size = 9, title.size = 22,
+                      subtitle.size = 8, caption.size = 7,
+                      legend.title.size = 18, legend.text.size = 6,
+                      strip.text.size = 19)
+
+  expect_equal(th$axis.title$size, 20)
+  expect_equal(th$axis.text$size, 9)
+  expect_equal(th$plot.title$size, 22)
+  expect_equal(th$plot.subtitle$size, 8)
+  expect_equal(th$plot.caption$size, 7)
+  expect_equal(th$legend.title$size, 18)
+  expect_equal(th$legend.text$size, 6)
+  expect_equal(th$strip.text$size, 19)
+})
+
+test_that("an element left unset follows base_size", {
+  th <- theme_fancyfx(base_size = 16, axis.title.size = 30)
+
+  expect_equal(th$axis.title$size, 30)
+  expect_equal(th$plot.title$size, 16)
+})
+
+test_that("panel labels and the figure title take their own sizes", {
+  # Both are drawn by the arranging step rather than the theme, so raising
+  # base_size alone would leave them stranded at their defaults.
+  model <- make_test_gam()
+  dat <- test_data()
+
+  expect_no_error(
+    combinePlots(model, dat, vars = c("x1", "x2"), title = "Title",
+                 label.size = 22, title.size = 20)
+  )
+  expect_no_error(
+    comparePlots(list(a = model, b = make_test_lm()), dat, "x1",
+                 title = "Title", label.size = 22, title.size = 20)
+  )
+})
+
+test_that("an empty title adds no annotation layer", {
+  model <- make_test_gam()
+  dat <- test_data()
+
+  expect_no_error(combinePlots(model, dat, vars = c("x1", "x2"), title = ""))
+})

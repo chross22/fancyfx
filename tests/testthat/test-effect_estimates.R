@@ -163,3 +163,94 @@ test_that("invalid arguments are refused before any fitting work happens", {
   expect_error(effect_estimates(model, "x1", level = c(0.8, 0.9)),
                "strictly between 0 and 1")
 })
+
+test_that("a variable whose name prefixes another is not confused with it", {
+  # Regression test. gratia's partial_match is substring matching, so
+  # select = "x1" also matched a smooth of x11 and the two arrived
+  # concatenated -- 200 rows drawn as a single curve jumping between them.
+  set.seed(1)
+  d <- data.frame(x1 = runif(300, 1, 10), x11 = runif(300, 1, 10))
+  d$y <- sin(d$x1) + d$x11 / 5 + rnorm(300, sd = 0.3)
+  model <- mgcv::gam(y ~ s(x1) + s(x11), data = d)
+
+  expect_equal(nrow(effect_estimates(model, "x1")), 100)
+  expect_equal(nrow(effect_estimates(model, "x11")), 100)
+  expect_equal(smooth_labels(model, "x1"), "s(x1)")
+  expect_equal(smooth_labels(model, "x11"), "s(x11)")
+
+  # The two smooths must not be the same curve.
+  expect_false(isTRUE(all.equal(effect_estimates(model, "x1")$.estimate,
+                                effect_estimates(model, "x11")$.estimate)))
+})
+
+test_that("smooth_labels keeps every level of a factor-smooth interaction", {
+  set.seed(2)
+  d <- data.frame(x = runif(300, 1, 10),
+                  f = factor(rep(c("a", "b", "c"), 100)))
+  d$y <- ifelse(d$f == "a", sin(d$x), ifelse(d$f == "b", cos(d$x), d$x / 5)) +
+    rnorm(300, sd = 0.2)
+  model <- mgcv::gam(y ~ s(x, by = f) + f, data = d)
+
+  expect_length(smooth_labels(model, "x"), 3)
+  expect_equal(nrow(effect_estimates(model, "x")), 300)
+})
+
+test_that("a simultaneous band is wider than a pointwise interval", {
+  # A pointwise interval covers the true value at each x separately. Across a
+  # curve evaluated at a hundred points, the function strays outside it far
+  # more often than the stated rate -- so any claim about the shape of a
+  # smooth wants the wider band.
+  model <- make_test_gam()
+
+  pointwise <- effect_estimates(model, "x1", interval = "ci")
+  simultaneous <- effect_estimates(model, "x1", interval = "simultaneous")
+
+  expect_gt(mean(simultaneous$.upper - simultaneous$.lower),
+            mean(pointwise$.upper - pointwise$.lower))
+  # Only the ribbon changes; the curve is the same curve.
+  expect_equal(simultaneous$.estimate, pointwise$.estimate)
+  expect_equal(simultaneous$.x, pointwise$.x)
+})
+
+test_that("simultaneous bands are reproducible and leave the RNG alone", {
+  model <- make_test_gam()
+
+  first <- effect_estimates(model, "x1", interval = "simultaneous")
+  second <- effect_estimates(model, "x1", interval = "simultaneous")
+  expect_equal(first$.lower, second$.lower)
+
+  set.seed(99)
+  invisible(runif(1))
+  state <- .Random.seed
+  invisible(effect_estimates(model, "x1", interval = "simultaneous"))
+  expect_identical(.Random.seed, state)
+})
+
+test_that("a simultaneous band is refused where it cannot be computed", {
+  # It needs gratia to simulate from the posterior of a smooth, which the
+  # prediction backend cannot do.
+  expect_error(
+    effect_estimates(make_test_lm(), "x1", interval = "simultaneous"),
+    "GAM partial effects only"
+  )
+  expect_error(
+    effect_estimates(make_test_gam(), "nope", interval = "simultaneous"),
+    "No smooth of 'nope'"
+  )
+})
+
+test_that("simultaneous bands work for factor smooths and reach the plot", {
+  set.seed(2)
+  d <- data.frame(x = runif(300, 1, 10),
+                  f = factor(rep(c("a", "b", "c"), 100)))
+  d$y <- ifelse(d$f == "a", sin(d$x), ifelse(d$f == "b", cos(d$x), d$x / 5)) +
+    rnorm(300, sd = 0.2)
+  model <- mgcv::gam(y ~ s(x, by = f) + f, data = d)
+
+  est <- effect_estimates(model, "x", interval = "simultaneous")
+  expect_true(".group" %in% names(est))
+  expect_equal(nlevels(est$.group), 3)
+
+  expect_s3_class(plotEffects(model, d, "x", interval = "simultaneous"),
+                  "patchwork")
+})

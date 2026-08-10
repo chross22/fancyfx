@@ -47,10 +47,12 @@ predictions on the response scale. For a GAM this argument chooses between
 two different quantities, not just two axis scales; see Details.}
 
 \item{interval}{\code{"auto"} (the default), \code{"se"} for a \verb{+/- 1} standard error
-ribbon, or \code{"ci"} for an interval at \code{level}. \code{"auto"} gives the SE ribbon
-this package has always drawn, except for Bayesian fits, which report no
-standard error and get their credible interval instead. \code{"cri"} is accepted
-as a name for the same thing as \code{"ci"}.}
+ribbon, \code{"ci"} for a pointwise interval at \code{level}, or \code{"simultaneous"}
+for a band covering the whole curve at \code{level} -- GAM partial effects
+only. \code{"auto"} gives the SE ribbon this package has always drawn, except
+for Bayesian fits, which report no standard error and get their credible
+interval instead. \code{"cri"} is accepted as a name for the same thing as
+\code{"ci"}.}
 
 \item{level}{Interval level used when \code{interval = "ci"}. Ignored otherwise.}
 
@@ -111,6 +113,15 @@ does not.
 Note that the default \verb{+/- 1 SE} ribbon spans roughly 68\%, not 95\%. It is
 the historical default of this package; pass \code{interval = "ci"} for a
 conventional confidence interval.
+
+For a GAM smooth, \code{interval = "simultaneous"} draws a band covering the
+whole curve rather than each point separately. A pointwise interval covers
+the true value at each x with the stated probability \emph{at that x}; across a
+curve evaluated at a hundred points, the true function strays outside it far
+more often than the stated rate. Any claim about the \emph{shape} of a smooth --
+which is usually why one is drawn -- is a claim about the whole curve, and
+the simultaneous band is the one that supports it. It is noticeably wider,
+which is the point.
 
 A \strong{Bayesian fit} (\pkg{brms}, \pkg{rstanarm}) is summarised from posterior
 draws, which yield an interval but no standard error, so the ribbon is the

@@ -135,8 +135,19 @@ panel, no grid, plain axis lines, and text sized to survive being shrunk into a
 column. Panels are labelled `A`, `B`, `C` by default.
 
 ```r
-# Bigger text for a narrow figure
-plotEffects(fit, dat, "x", theme = theme_fancyfx(base_size = 14))
+# Bigger text for a narrow figure — scales every element together
+plotEffects(fit, dat, "x", theme = theme_fancyfx(base_size = 16))
+
+# Or size each element on its own
+plotEffects(fit, dat, "x",
+            theme = theme_fancyfx(base_size = 13,
+                                  axis.title.size = 18,
+                                  axis.text.size = 10,
+                                  legend.title.size = 15))
+
+# Panel labels and the figure title are drawn by the arranging step,
+# so they have their own arguments
+combinePlots(fit, dat, vars, title = "...", label.size = 20, title.size = 18)
 
 # Lower-case, numbered, none, or your own
 combinePlots(fit, dat, vars, labels = "a")

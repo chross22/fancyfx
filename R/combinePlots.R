@@ -20,6 +20,11 @@
 #' @param labels Panel labels: `"A"` (the default) for upper-case letters, `"a"`
 #'   for lower-case, `"1"` for numbers, `"none"` for none, or a character vector
 #'   used verbatim, one per panel.
+#' @param label.size Font size of the panel labels. These are drawn by the
+#'   arranging step rather than by the theme, so they do not follow
+#'   `base_size` and have to be set here.
+#' @param title.size Font size of the overall figure title, for the same
+#'   reason.
 #' @param common.legend Whether the panels share one legend.
 #' @param ... Passed through to [plotEffects()] and on to the backend.
 #'
@@ -49,6 +54,8 @@ combinePlots <- function(model, dat, vars, title = "",
                          rug.type = c("histogram", "density"),
                          bins = 30,
                          labels = "A",
+                         label.size = 14,
+                         title.size = 14,
                          common.legend = TRUE,
                          ...) {
 
@@ -76,7 +83,16 @@ combinePlots <- function(model, dat, vars, title = "",
 
   arranged <- ggpubr::ggarrange(plotlist = effect.plots,
                                 common.legend = common.legend,
-                                labels = panel_labels(labels, length(vars)))
+                                labels = panel_labels(labels, length(vars)),
+                                font.label = list(size = label.size,
+                                                  face = "bold"))
 
-  ggpubr::annotate_figure(arranged, top = title)
+  if (!nzchar(title)) return(arranged)
+
+  # The overall title is drawn by annotate_figure(), which has its own font
+  # settings and does not see the panels' theme -- so it needs telling too, or
+  # raising base_size leaves it stranded at its default size.
+  ggpubr::annotate_figure(
+    arranged,
+    top = ggpubr::text_grob(title, size = title.size, face = "bold"))
 }

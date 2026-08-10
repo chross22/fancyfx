@@ -17,6 +17,8 @@ combinePlots(
   rug.type = c("histogram", "density"),
   bins = 30,
   labels = "A",
+  label.size = 14,
+  title.size = 14,
   common.legend = TRUE,
   ...
 )
@@ -49,6 +51,13 @@ value used for every variable, or one per entry in \code{vars}.}
 \item{labels}{Panel labels: \code{"A"} (the default) for upper-case letters, \code{"a"}
 for lower-case, \code{"1"} for numbers, \code{"none"} for none, or a character vector
 used verbatim, one per panel.}
+
+\item{label.size}{Font size of the panel labels. These are drawn by the
+arranging step rather than by the theme, so they do not follow
+\code{base_size} and have to be set here.}
+
+\item{title.size}{Font size of the overall figure title, for the same
+reason.}
 
 \item{common.legend}{Whether the panels share one legend.}
 

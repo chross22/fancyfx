@@ -4,7 +4,7 @@
 \alias{partial_effect}
 \title{The partial effect of a smooth, via gratia}
 \usage{
-partial_effect(model, var, interval, level, ...)
+partial_effect(model, var, interval, level, nsim = 10000, seed = 1, ...)
 }
 \arguments{
 \item{model}{A fitted model gratia understands.}

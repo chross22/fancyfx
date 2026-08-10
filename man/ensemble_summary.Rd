@@ -58,8 +58,10 @@ if (requireNamespace("terra", quietly = TRUE)) {
 is extrapolating in the first place.
 
 Other spatial plots:
+\code{\link[=hex_bin]{hex_bin()}},
 \code{\link[=mess]{mess()}},
 \code{\link[=plotExtrapolation]{plotExtrapolation()}},
+\code{\link[=plotHexbin]{plotHexbin()}},
 \code{\link[=plotUncertainty]{plotUncertainty()}}
 }
 \concept{spatial plots}

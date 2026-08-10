@@ -103,7 +103,9 @@ check_scale <- function(scale) {
 #' @return `interval`, with `"cri"` normalised to `"ci"`
 #' @keywords internal
 check_interval <- function(interval) {
-  interval <- check_choice(interval, c("auto", "se", "ci", "cri"), "interval")
+  interval <- check_choice(interval,
+                           c("auto", "se", "ci", "cri", "simultaneous"),
+                           "interval")
   if (interval == "cri") "ci" else interval
 }
 

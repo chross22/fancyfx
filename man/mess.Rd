@@ -66,7 +66,9 @@ disagreement between members.
 
 Other spatial plots:
 \code{\link[=ensemble_summary]{ensemble_summary()}},
+\code{\link[=hex_bin]{hex_bin()}},
 \code{\link[=plotExtrapolation]{plotExtrapolation()}},
+\code{\link[=plotHexbin]{plotHexbin()}},
 \code{\link[=plotUncertainty]{plotUncertainty()}}
 }
 \concept{spatial plots}

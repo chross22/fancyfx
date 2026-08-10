@@ -166,6 +166,48 @@ changing what is on the page would misrepresent the map:
 plotUncertainty(ensemble, max.cells = 500)
 ```
 
+## Binning into hexagons
+
+A raster drawn at native resolution invites the reader to believe every pixel
+was separately estimated, which is rarely true when the covariates were
+interpolated from far coarser data. Aggregating to a cell size you can defend is
+more honest than drawing detail the model does not have.
+
+`hex_bin()` and `plotHexbin()` take either a raster or a data frame of points:
+
+```{r hexbin}
+plotHexbin(ensemble_summary(ensemble, "mean"), bins = 20,
+           title = "Mean projection, binned", legend.lab = "P(present)")
+```
+
+Hexagons rather than squares for a reason worth stating: every neighbour of a
+hexagon shares an edge and lies the same distance away, where a square grid has
+neighbours at two different distances depending on whether they meet at an edge
+or a corner. That makes hexagons better behaved for anything depending on
+adjacency, and removes the visual grain a square lattice imposes.
+
+For point data — survey effort, catch, sightings — pass the data frame and say
+which column to summarise, or omit it to count:
+
+```{r hexbin-points, fig.height = 4}
+ggpubr::ggarrange(
+  plotHexbin(survey, fun = "count", bins = 12, coords = c("lon", "lat"),
+             title = "Survey effort", legend.lab = "Observations"),
+  plotHexbin(survey, value = "present", bins = 12, coords = c("lon", "lat"),
+             title = "Proportion present", legend.lab = "Proportion"),
+  labels = c("A", "B")
+)
+```
+
+`min.n` drops hexagons holding too few values to summarise — one observation is
+not a summary of anything, and on a map it is indistinguishable from a thousand.
+The returned `.n` column reports the count either way.
+
+One caveat the function states itself, once per session: binning unprojected
+longitude and latitude does not give equal-area hexagons, because a degree of
+longitude shortens toward the poles. A count per hexagon is then not a density.
+Project first if the areas matter.
+
 ## The numbers underneath
 
 Both maps have a computational half that returns a raster, if you would rather

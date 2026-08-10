@@ -21,10 +21,12 @@
 #'   predictions on the response scale. For a GAM this argument chooses between
 #'   two different quantities, not just two axis scales; see Details.
 #' @param interval `"auto"` (the default), `"se"` for a `+/- 1` standard error
-#'   ribbon, or `"ci"` for an interval at `level`. `"auto"` gives the SE ribbon
-#'   this package has always drawn, except for Bayesian fits, which report no
-#'   standard error and get their credible interval instead. `"cri"` is accepted
-#'   as a name for the same thing as `"ci"`.
+#'   ribbon, `"ci"` for a pointwise interval at `level`, or `"simultaneous"`
+#'   for a band covering the whole curve at `level` -- GAM partial effects
+#'   only. `"auto"` gives the SE ribbon this package has always drawn, except
+#'   for Bayesian fits, which report no standard error and get their credible
+#'   interval instead. `"cri"` is accepted as a name for the same thing as
+#'   `"ci"`.
 #' @param level Interval level used when `interval = "ci"`. Ignored otherwise.
 #' @param n Number of points at which to evaluate the effect. Ignored for the
 #'   GAM partial-effect path, where \pkg{gratia} chooses the grid.
@@ -65,6 +67,15 @@
 #' Note that the default `+/- 1 SE` ribbon spans roughly 68%, not 95%. It is
 #' the historical default of this package; pass `interval = "ci"` for a
 #' conventional confidence interval.
+#'
+#' For a GAM smooth, `interval = "simultaneous"` draws a band covering the
+#' whole curve rather than each point separately. A pointwise interval covers
+#' the true value at each x with the stated probability *at that x*; across a
+#' curve evaluated at a hundred points, the true function strays outside it far
+#' more often than the stated rate. Any claim about the *shape* of a smooth --
+#' which is usually why one is drawn -- is a claim about the whole curve, and
+#' the simultaneous band is the one that supports it. It is noticeably wider,
+#' which is the point.
 #'
 #' A **Bayesian fit** (\pkg{brms}, \pkg{rstanarm}) is summarised from posterior
 #' draws, which yield an interval but no standard error, so the ribbon is the

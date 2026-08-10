@@ -158,7 +158,12 @@ effect_estimates.gamm <- function(model, var, ...) {
 #' @param ... Passed to [gratia::smooth_estimates()].
 #' @return A standardized effect frame.
 #' @keywords internal
-partial_effect <- function(model, var, interval, level, ...) {
+partial_effect <- function(model, var, interval, level, nsim = 10000,
+                           seed = 1, ...) {
+  if (interval == "simultaneous") {
+    return(simultaneous_effect(model, var, level, nsim, seed, ...))
+  }
+
   # gratia raises its own error for a name it cannot match, and suggests
   # partial_match = TRUE -- advice that cannot help here, since we already pass
   # it. Say what is actually wrong and list what the model does offer.
@@ -181,6 +186,19 @@ partial_effect <- function(model, var, interval, level, ...) {
   )
   est <- as.data.frame(est)
 
+  # partial_match is substring matching, so select = "x1" also picks up a
+  # smooth of x11, and the two arrive concatenated -- drawn as one curve that
+  # jumps between them. Filtered on a word boundary instead. A factor-smooth
+  # interaction still keeps all its levels, since s(x):fa and s(x):fb both
+  # match the variable as a whole word.
+  wanted <- smooth_labels(model, var)
+  if (".smooth" %in% names(est)) {
+    est <- est[est$.smooth %in% wanted, , drop = FALSE]
+  }
+  if (!nrow(est)) {
+    stop("No smooth of '", var, "' found in the model.", call. = FALSE)
+  }
+
   mult <- if (interval == "se") 1 else stats::qnorm(1 - (1 - level) / 2)
 
   standardize_effect(
@@ -191,6 +209,83 @@ partial_effect <- function(model, var, interval, level, ...) {
     quantity = "Partial Effect",
     group = smooth_group(est)
   )
+}
+
+#' A simultaneous confidence band for a smooth
+#'
+#' A pointwise interval covers the true value at each x separately, with the
+#' stated probability at each one. It does not cover the whole curve with that
+#' probability -- across a smooth evaluated at a hundred points, the true
+#' function will stray outside a pointwise 95% band far more often than 5% of
+#' the time. Any claim about the *shape* of a smooth, which is usually the
+#' reason for drawing one, is a claim about the whole curve, and wants a band
+#' that covers the whole curve.
+#'
+#' @param model A fitted model gratia understands.
+#' @param var Name of the smoothed predictor.
+#' @param level Interval level.
+#' @param nsim Number of posterior simulations used to find the critical value.
+#' @param seed Random seed. The band is simulated, so an unseeded figure cannot
+#'   be redrawn exactly.
+#' @param ... Passed to [gratia::confint.gam()].
+#' @return A standardized effect frame.
+#' @keywords internal
+simultaneous_effect <- function(model, var, level, nsim, seed, ...) {
+  # Seeded and restored, as in permutation_importance(): a simulated band that
+  # moves between runs cannot be checked by a reader, and silently resetting
+  # the caller's stream would change results elsewhere in their script.
+  if (!is.null(seed)) {
+    old.seed <- if (exists(".Random.seed", .GlobalEnv)) {
+      get(".Random.seed", .GlobalEnv)
+    } else {
+      NULL
+    }
+    set.seed(seed)
+    on.exit({
+      if (!is.null(old.seed)) assign(".Random.seed", old.seed, .GlobalEnv)
+    }, add = TRUE)
+  }
+
+  # gratia's confint() wants the smooth's label -- "s(x1)" -- where
+  # smooth_estimates() accepts the bare variable name. Handing it "x1" fails
+  # with "argument of length 0", which says nothing about what went wrong, so
+  # the label is resolved here first.
+  est <- stats::confint(model, parm = smooth_labels(model, var),
+                        type = "simultaneous", level = level, nsim = nsim, ...)
+  est <- as.data.frame(est)
+
+  standardize_effect(
+    x = est[[var]],
+    estimate = est$.estimate,
+    lower = est$.lower_ci,
+    upper = est$.upper_ci,
+    quantity = "Partial Effect",
+    group = smooth_group(est)
+  )
+}
+
+#' Smooth labels involving a given variable
+#'
+#' A factor-smooth interaction contributes several labels for one variable --
+#' `s(x):fa`, `s(x):fb` and so on -- so this returns all of them.
+#'
+#' @param model A fitted model gratia understands.
+#' @param var Name of the smoothed predictor.
+#' @return A character vector of smooth labels.
+#' @keywords internal
+smooth_labels <- function(model, var) {
+  available <- tryCatch(gratia::smooths(model), error = function(e) NULL)
+  if (!length(available)) {
+    stop("Could not read the smooths of this model.", call. = FALSE)
+  }
+
+  # Word boundaries, so asking for "x" does not match a smooth of "x1".
+  matched <- available[grepl(paste0("\\b", var, "\\b"), available)]
+  if (!length(matched)) {
+    stop("No smooth of '", var, "' found in the model (available: ",
+         paste(available, collapse = ", "), ").", call. = FALSE)
+  }
+  matched
 }
 
 #' Unwrap a fitted object that carries its GAM in a list element
@@ -271,6 +366,14 @@ effect_estimates.default <- function(model, var,
   scale <- check_scale(scale)
   interval <- check_interval(interval)
   check_level(level)
+
+  if (interval == "simultaneous") {
+    stop("A simultaneous band is available for GAM partial effects only, ",
+         "where gratia can simulate from the posterior of the smooth. This ",
+         "model of class <", paste(class(model), collapse = "/"), "> is shown ",
+         "as predictions instead; use interval = \"ci\" for a pointwise ",
+         "interval.", call. = FALSE)
+  }
 
   # Predictions are naturally reported on the response scale, and it is the one
   # type every model class supports -- a Gaussian lm, for instance, refuses

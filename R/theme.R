@@ -14,6 +14,24 @@
 #'   `"none"`.
 #' @param border Whether to draw a full box around the panel rather than only
 #'   the left and bottom axis lines.
+#' @param axis.title.size,axis.text.size Size of the axis titles and of the
+#'   numbers along the axes.
+#' @param title.size,subtitle.size,caption.size Size of the plot title,
+#'   subtitle and caption.
+#' @param legend.title.size,legend.text.size Size of the legend title and of
+#'   its entries.
+#' @param strip.text.size Size of facet strip labels.
+#'
+#' @section Sizing text:
+#' Raising `base_size` scales every element at once, keeping their relative
+#' sizes balanced, and is usually all that is needed. Each element also takes
+#' its own argument for the cases where it is not: a long axis title that needs
+#' to be smaller than the numbers beside it, or a journal that specifies a size
+#' for one thing and not the rest. Anything left `NULL` follows `base_size`.
+#'
+#' Panel labels -- the `A`, `B`, `C` on a multi-panel figure -- are drawn by the
+#' arranging step rather than the theme, so they have their own `label.size`
+#' argument on [combinePlots()] and [comparePlots()].
 #'
 #' @return A \pkg{ggplot2} theme object.
 #'
@@ -26,24 +44,53 @@
 #' # The default
 #' plotEffects(fit, iris, "Sepal.Length")
 #'
-#' # Larger text for a narrow, two-column figure
-#' plotEffects(fit, iris, "Sepal.Length", theme = theme_fancyfx(base_size = 14))
+#' # Everything larger, for a narrow two-column figure
+#' plotEffects(fit, iris, "Sepal.Length", theme = theme_fancyfx(base_size = 16))
+#'
+#' # Or one element at a time
+#' plotEffects(fit, iris, "Sepal.Length",
+#'             theme = theme_fancyfx(base_size = 14,
+#'                                   axis.title.size = 18,
+#'                                   axis.text.size = 11))
 #'
 #' # Or hand it any other ggplot2 theme
 #' plotEffects(fit, iris, "Sepal.Length", theme = ggplot2::theme_minimal())
 #'
 #' @export
 theme_fancyfx <- function(base_size = 12, base_family = "",
-                          legend = "right", border = FALSE) {
+                          legend = "right", border = FALSE,
+                          axis.title.size = NULL, axis.text.size = NULL,
+                          title.size = NULL, subtitle.size = NULL,
+                          caption.size = NULL,
+                          legend.title.size = NULL, legend.text.size = NULL,
+                          strip.text.size = NULL) {
+  # Each element defaults to a multiple of base_size, so raising base_size
+  # alone scales the whole figure and stays balanced. Setting one explicitly
+  # overrides just that element.
+  axis.title.size <- axis.title.size %||% base_size
+  axis.text.size <- axis.text.size %||% (base_size * 0.85)
+  title.size <- title.size %||% base_size
+  subtitle.size <- subtitle.size %||% (base_size * 0.85)
+  caption.size <- caption.size %||% (base_size * 0.8)
+  legend.title.size <- legend.title.size %||% base_size
+  legend.text.size <- legend.text.size %||% (base_size * 0.9)
+  strip.text.size <- strip.text.size %||% base_size
+
   ggpubr::theme_pubr(base_size = base_size, base_family = base_family,
                      legend = legend, border = border) +
     ggplot2::theme(
       # theme_pubr centers the title; a figure panel reads better left-aligned,
       # where it sits over the y axis rather than floating above the middle.
-      plot.title = ggplot2::element_text(size = base_size, face = "bold",
+      plot.title = ggplot2::element_text(size = title.size, face = "bold",
                                          hjust = 0),
-      axis.title = ggplot2::element_text(size = base_size),
-      legend.title = ggplot2::element_text(size = base_size, face = "bold"),
+      plot.subtitle = ggplot2::element_text(size = subtitle.size, hjust = 0),
+      plot.caption = ggplot2::element_text(size = caption.size, hjust = 0),
+      axis.title = ggplot2::element_text(size = axis.title.size),
+      axis.text = ggplot2::element_text(size = axis.text.size),
+      legend.title = ggplot2::element_text(size = legend.title.size,
+                                           face = "bold"),
+      legend.text = ggplot2::element_text(size = legend.text.size),
+      strip.text = ggplot2::element_text(size = strip.text.size),
       # The rug sits directly above the curve and shares its x axis, so the
       # gap between the two has to stay small or they stop reading as one
       # figure.

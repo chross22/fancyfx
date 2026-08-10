@@ -263,6 +263,32 @@ figures do not silently change. For a conventional 95% interval, ask for one:
 plotEffects(lm.fit, mtcars, "wt", interval = "ci", level = 0.95)
 ```
 
+For a GAM smooth there is a third option, and it is the statistically careful
+one. A pointwise interval covers the true value at each x separately. Across a
+curve evaluated at a hundred points, the true function strays outside a
+pointwise 95% band far more often than 5% of the time — so a pointwise ribbon
+does not support a claim about the *shape* of the smooth, which is usually the
+reason for drawing it.
+
+```{r simultaneous, fig.height = 4}
+gam.fit3 <- mgcv::gam(Petal.Length ~ s(Sepal.Length), data = iris)
+
+ggpubr::ggarrange(
+  plotEffects(gam.fit3, iris, "Sepal.Length", interval = "ci",
+              xlab = "Sepal length (cm)"),
+  plotEffects(gam.fit3, iris, "Sepal.Length", interval = "simultaneous",
+              xlab = "Sepal length (cm)"),
+  labels = c("Pointwise", "Simultaneous"),
+  font.label = list(size = 11)
+)
+```
+
+The simultaneous band is noticeably wider, which is the point. It is available
+only for GAM partial effects, where `gratia` can simulate from the posterior of
+the smooth; asking for one anywhere else is an error rather than a silent
+substitution. Because it is simulated, it is seeded so a figure can be redrawn,
+and the seed is restored afterwards so nothing else in your script shifts.
+
 On the response scale, `interval = "ci"` builds the interval on the link scale
 and back-transforms it, so it stays inside the range the response actually
 admits — a probability band will not run past 0 or 1. That construction is
@@ -328,6 +354,34 @@ same text in a wide figure. Set the size to match the width you will save at.
 plotEffects(lm.fit, mtcars, "wt",
             xlab = "Weight (1000 lbs)",
             theme = theme_fancyfx(base_size = 14))
+```
+
+`base_size` scales everything at once and keeps the relative sizes balanced,
+which is usually what you want. When it is not, every element takes its own
+argument:
+
+```{r theme-elements, fig.height = 4}
+plotEffects(lm.fit, mtcars, "wt",
+            xlab = "Weight (1000 lbs)",
+            theme = theme_fancyfx(base_size = 13,
+                                  axis.title.size = 18,
+                                  axis.text.size = 10,
+                                  legend.title.size = 15))
+```
+
+The full set is `axis.title.size`, `axis.text.size`, `title.size`,
+`subtitle.size`, `caption.size`, `legend.title.size`, `legend.text.size` and
+`strip.text.size`. Anything left alone follows `base_size`.
+
+Two pieces of text are drawn by the arranging step rather than the theme, so
+they have their own arguments on `combinePlots()` and `comparePlots()` — the
+panel labels and the overall figure title:
+
+```{r theme-labels, fig.height = 4}
+combinePlots(lm.fit, mtcars, vars = c("wt", "hp"),
+             title = "Both terms",
+             label.size = 20, title.size = 18,
+             theme = theme_fancyfx(base_size = 14))
 ```
 
 Any other ggplot2 theme can be passed instead:

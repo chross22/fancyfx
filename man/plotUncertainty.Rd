@@ -74,7 +74,9 @@ for whether the projection is extrapolating.
 
 Other spatial plots:
 \code{\link[=ensemble_summary]{ensemble_summary()}},
+\code{\link[=hex_bin]{hex_bin()}},
 \code{\link[=mess]{mess()}},
-\code{\link[=plotExtrapolation]{plotExtrapolation()}}
+\code{\link[=plotExtrapolation]{plotExtrapolation()}},
+\code{\link[=plotHexbin]{plotHexbin()}}
 }
 \concept{spatial plots}
