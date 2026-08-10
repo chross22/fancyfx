@@ -67,6 +67,7 @@ regression trees. \emph{Journal of Animal Ecology}, 77(4), 802-813.
 
 Other evaluation plots:
 \code{\link[=calibration_estimates]{calibration_estimates()}},
+\code{\link[=held_out]{held_out()}},
 \code{\link[=permutation_importance]{permutation_importance()}},
 \code{\link[=plotCalibration]{plotCalibration()}},
 \code{\link[=plotImportance]{plotImportance()}},
