@@ -319,3 +319,87 @@ test_that("a model that does not keep its data can borrow the plotting data", {
   expect_s3_class(suppressMessages(plotEffects(fit, d, "x1", n = 10)),
                   "patchwork")
 })
+
+test_that("mess scores a data frame the same as the raster of the same cells", {
+  skip_if_not_installed("terra")
+  # The two paths must be one method with two doors. A separate implementation
+  # for data frames would be free to drift, and nothing outside would notice.
+  set.seed(1)
+  training <- data.frame(temp = rnorm(200, 10, 2), depth = runif(200, 0, 100))
+  covariates <- c(
+    terra::rast(nrows = 10, ncols = 10, vals = rnorm(100, 12, 3)),
+    terra::rast(nrows = 10, ncols = 10, vals = runif(100, -20, 140))
+  )
+  names(covariates) <- c("temp", "depth")
+
+  by_raster <- mess(covariates, training)
+  by_frame <- mess(as.data.frame(covariates), training)
+
+  expect_equal(by_frame$mess, as.numeric(terra::values(by_raster)[, 1]))
+})
+
+test_that("mess names the covariate that made a cell novel", {
+  training <- data.frame(temp = c(4, 8, 12, 16), depth = c(10, 20, 30, 40))
+  # Row 1 is ordinary; row 2 is far too warm; row 3 is far too deep.
+  cells <- data.frame(temp = c(10, 40, 10), depth = c(25, 25, 400))
+
+  out <- mess(cells, training, limiting = TRUE)
+
+  expect_equal(names(out), c("mess", "mess_variable"))
+  expect_gt(out$mess[1], 0)
+  expect_lt(out$mess[2], 0)
+  expect_lt(out$mess[3], 0)
+  expect_equal(out$mess_variable[2], "temp")
+  expect_equal(out$mess_variable[3], "depth")
+})
+
+test_that("limiting is off by default, so the returned shape is unchanged", {
+  training <- data.frame(temp = c(4, 8, 12, 16))
+  cells <- data.frame(temp = c(10, 40))
+
+  expect_equal(names(mess(cells, training)), "mess")
+  expect_equal(names(mess(cells, training, limiting = TRUE)),
+               c("mess", "mess_variable"))
+})
+
+test_that("the raster's limiting layer carries the covariate names", {
+  skip_if_not_installed("terra")
+  set.seed(2)
+  training <- data.frame(temp = rnorm(100, 10, 2), depth = runif(100, 0, 100))
+  covariates <- c(
+    terra::rast(nrows = 8, ncols = 8, vals = rnorm(64, 12, 4)),
+    terra::rast(nrows = 8, ncols = 8, vals = runif(64, -40, 160))
+  )
+  names(covariates) <- c("temp", "depth")
+
+  out <- mess(covariates, training, limiting = TRUE)
+
+  expect_equal(names(out), c("mess", "mess_variable"))
+  # A raster cannot hold a character, so the names live in the levels table.
+  levels.table <- terra::levels(out[["mess_variable"]])[[1]]
+  expect_setequal(levels.table$mess_variable, c("temp", "depth"))
+})
+
+test_that("mess on a data frame handles one row and missing values", {
+  training <- data.frame(temp = c(4, 8, 12, 16), depth = c(10, 20, 30, 40))
+
+  one <- mess(data.frame(temp = 10, depth = 25), training, limiting = TRUE)
+  expect_equal(nrow(one), 1)
+  expect_equal(names(one), c("mess", "mess_variable"))
+
+  # A covariate missing for a cell makes that cell unscoreable, not an error.
+  gaps <- mess(data.frame(temp = c(10, NA), depth = c(25, 25)), training,
+               limiting = TRUE)
+  expect_false(is.na(gaps$mess[1]))
+  expect_true(is.na(gaps$mess[2]))
+})
+
+test_that("mess refuses what it cannot score, and says which side is short", {
+  training <- data.frame(temp = c(4, 8, 12))
+
+  expect_error(mess(list(temp = 1), training), "SpatRaster or a data frame")
+  expect_error(mess(data.frame(salinity = 30), training),
+               "No covariates in common")
+  expect_error(mess(data.frame(temp = 10), training, vars = "depth"),
+               "Data has no column")
+})

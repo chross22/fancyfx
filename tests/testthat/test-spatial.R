@@ -170,7 +170,11 @@ test_that("mess reports what it cannot match", {
                "No covariates in common")
   expect_error(mess(f$covariates, f$training, vars = "salinity"),
                "no layer\\(s\\): salinity")
-  expect_error(mess(data.frame(a = 1), f$training), "must be a SpatRaster")
+  # A data frame is a supported input now, so the complaint is about the
+  # covariates in it rather than about its class.
+  expect_error(mess(data.frame(a = 1), f$training), "No covariates in common")
+  # Something that is neither is still refused.
+  expect_error(mess(list(a = 1), f$training), "SpatRaster or a data frame")
 })
 
 test_that("a constant covariate does not divide by a zero range", {
