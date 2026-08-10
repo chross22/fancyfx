@@ -50,10 +50,24 @@
 #'   \item{[plotUncertainty()]}{Where the members of an ensemble disagree.}
 #'   \item{[plotExtrapolation()]}{Where the projection leaves the range of
 #'     conditions the model was fitted under, and is therefore guessing.}
+#'   \item{[hex_bin()], [plotHexbin()]}{Aggregate a raster or point data into
+#'     a hexagonal lattice.}
+#'   \item{[thin_points()]}{Thin records so that no cell holds more than a few,
+#'     where clustering reflects survey effort rather than the species.}
+#'   \item{[niche_overlap()], [niche_equivalency()]}{How much two predicted
+#'     distributions overlap, and whether that is more than chance.}
 #'   \item{[ensemble_summary()], [mess()]}{The rasters behind those.}
 #' }
 #'
 #' See `vignette("spatial")`.
+#'
+#' @section Diagnostics for spatial validation:
+#' [spatial_sorting_bias()] measures how independent a train/test split really
+#' is -- whether the test presences sit closer to the training data than the
+#' test absences do, letting a model score well on proximity alone. It is the
+#' quantity behind this package's warnings about random cross-validation folds
+#' on spatially correlated data: those say the problem exists, this says how
+#' bad it is for a particular split.
 #'
 #' @section Publication-ready by default:
 #' [theme_fancyfx()] is built on [ggpubr::theme_pubr()]: no background panel, no

@@ -92,11 +92,13 @@ Harrell, F. E. (2015). \emph{Regression Modeling Strategies} (2nd ed.). Springer
 discrimination.
 
 Other evaluation plots:
+\code{\link[=calc_deviance]{calc_deviance()}},
 \code{\link[=permutation_importance]{permutation_importance()}},
 \code{\link[=plotCalibration]{plotCalibration()}},
 \code{\link[=plotImportance]{plotImportance()}},
 \code{\link[=plotROC]{plotROC()}},
 \code{\link[=plotThreshold]{plotThreshold()}},
+\code{\link[=spatial_sorting_bias]{spatial_sorting_bias()}},
 \code{\link[=threshold_metrics]{threshold_metrics()}}
 }
 \concept{evaluation plots}

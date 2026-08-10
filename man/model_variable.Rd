@@ -4,12 +4,15 @@
 \alias{model_variable}
 \title{Recover a predictor's observed values from a fitted model}
 \usage{
-model_variable(model, var)
+model_variable(model, var, data = NULL)
 }
 \arguments{
 \item{model}{A fitted model.}
 
 \item{var}{Name of the predictor, as a string.}
+
+\item{data}{Optional data to fall back on when the model does not keep the
+frame it was fitted with.}
 }
 \value{
 The observed values of \code{var}.

@@ -21,6 +21,9 @@
 #'   credible interval. `"cri"` is another name for `"ci"`.
 #' @param level Interval level, used when `interval = "ci"`.
 #' @param n Number of points at which to evaluate the effect.
+#' @param data Optional data frame to take the predictor's range from, for
+#'   models that do not keep the data they were fitted on -- a `gbm`, for
+#'   instance. [plotEffects()] passes the `dat` it was given.
 #' @param re.form For a mixed model, which random effects to include. `NA` (the
 #'   default) gives the population-level effect; `NULL` includes all of them.
 #'   Not forwarded to models without random effects, which would reject it.
@@ -72,6 +75,7 @@ effect_estimates <- function(model, var,
                              interval = c("auto", "se", "ci", "cri"),
                              level = 0.95,
                              n = 100,
+                             data = NULL,
                              ...) {
   UseMethod("effect_estimates")
 }
@@ -358,6 +362,7 @@ effect_estimates.default <- function(model, var,
                                      interval = c("auto", "se", "ci", "cri"),
                                      level = 0.95,
                                      n = 100,
+                                     data = NULL,
                                      re.form = NA,
                                      ...) {
   # NextMethod() from the gam method arrives with these already checked and
@@ -380,13 +385,14 @@ effect_estimates.default <- function(model, var,
   # "link" outright.
   if (scale == "auto") scale <- "response"
 
-  obs <- model_variable(model, var)
+  obs <- model_variable(model, var, data)
   grid <- seq(min(obs, na.rm = TRUE), max(obs, na.rm = TRUE), length.out = n)
 
   # Built with do.call rather than tidyeval: `var` is a plain string, and
   # do.call keeps this readable without pulling `:=` into the namespace.
   grid.args <- list(model = model)
   grid.args[[var]] <- grid
+  if (!is.null(data)) grid.args$newdata <- as.data.frame(data)
   newdata <- do.call(marginaleffects::datagrid, grid.args)
 
   # A model summarised from posterior draws reports an interval and no standard
@@ -611,10 +617,20 @@ re_form_arg <- function(model) {
 #'
 #' @param model A fitted model.
 #' @param var Name of the predictor, as a string.
+#' @param data Optional data to fall back on when the model does not keep the
+#'   frame it was fitted with.
 #' @return The observed values of `var`.
 #' @keywords internal
-model_variable <- function(model, var) {
+model_variable <- function(model, var, data = NULL) {
   frame <- tryCatch(stats::model.frame(model), error = function(e) NULL)
+
+  # Not every model keeps the data it was fitted on. A gbm, for one, stores
+  # only its variable names, so model.frame() fails and the range has to come
+  # from somewhere else -- the data the caller already supplied for the rug.
+  if ((is.null(frame) || !(var %in% names(frame))) && !is.null(data)) {
+    data <- as.data.frame(data)
+    if (var %in% names(data)) frame <- data
+  }
 
   if (is.null(frame) || !(var %in% names(frame))) {
     # model.frame() names columns by the term as written, so a model fitted with

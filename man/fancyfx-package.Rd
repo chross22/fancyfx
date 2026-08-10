@@ -62,10 +62,26 @@ project.
 \item{\code{\link[=plotUncertainty]{plotUncertainty()}}}{Where the members of an ensemble disagree.}
 \item{\code{\link[=plotExtrapolation]{plotExtrapolation()}}}{Where the projection leaves the range of
 conditions the model was fitted under, and is therefore guessing.}
+\item{\code{\link[=hex_bin]{hex_bin()}}, \code{\link[=plotHexbin]{plotHexbin()}}}{Aggregate a raster or point data into
+a hexagonal lattice.}
+\item{\code{\link[=thin_points]{thin_points()}}}{Thin records so that no cell holds more than a few,
+where clustering reflects survey effort rather than the species.}
+\item{\code{\link[=niche_overlap]{niche_overlap()}}, \code{\link[=niche_equivalency]{niche_equivalency()}}}{How much two predicted
+distributions overlap, and whether that is more than chance.}
 \item{\code{\link[=ensemble_summary]{ensemble_summary()}}, \code{\link[=mess]{mess()}}}{The rasters behind those.}
 }
 
 See \code{vignette("spatial")}.
+}
+
+\section{Diagnostics for spatial validation}{
+
+\code{\link[=spatial_sorting_bias]{spatial_sorting_bias()}} measures how independent a train/test split really
+is -- whether the test presences sit closer to the training data than the
+test absences do, letting a model score well on proximity alone. It is the
+quantity behind this package's warnings about random cross-validation folds
+on spatially correlated data: those say the problem exists, this says how
+bad it is for a particular split.
 }
 
 \section{Publication-ready by default}{

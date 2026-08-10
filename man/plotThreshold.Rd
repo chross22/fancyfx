@@ -78,11 +78,13 @@ plotThreshold(fit, dat[201:400, ], metrics = "tss")
 \code{\link[=plotROC]{plotROC()}}, \code{\link[=threshold_metrics]{threshold_metrics()}}.
 
 Other evaluation plots:
+\code{\link[=calc_deviance]{calc_deviance()}},
 \code{\link[=calibration_estimates]{calibration_estimates()}},
 \code{\link[=permutation_importance]{permutation_importance()}},
 \code{\link[=plotCalibration]{plotCalibration()}},
 \code{\link[=plotImportance]{plotImportance()}},
 \code{\link[=plotROC]{plotROC()}},
+\code{\link[=spatial_sorting_bias]{spatial_sorting_bias()}},
 \code{\link[=threshold_metrics]{threshold_metrics()}}
 }
 \concept{evaluation plots}

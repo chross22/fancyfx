@@ -208,6 +208,81 @@ longitude and latitude does not give equal-area hexagons, because a degree of
 longitude shortens toward the poles. A count per hexagon is then not a density.
 Project first if the areas matter.
 
+## Thinning uneven survey effort
+
+Where records pile up because somewhere was visited often rather than because
+the species is common there, a model fitted to the raw points learns the
+sampling as though it were the species.
+
+```{r thinning}
+set.seed(1)
+# Four hundred records from one small, heavily surveyed corner; a hundred
+# spread over the whole domain.
+records <- data.frame(x = c(runif(400, 0, 2), runif(100, 0, 10)),
+                      y = c(runif(400, 0, 2), runif(100, 0, 10)))
+
+thinned <- thin_points(records, n = 1, bins = 12)
+c(before = nrow(records), after = nrow(thinned))
+```
+
+Thinning is a blunt instrument and it throws data away. It is worth doing when
+the clustering is an artefact of where people looked, and worth *not* doing when
+the clustering is the signal. Nothing in the function can tell those apart, so
+that judgement stays with you.
+
+The lattice is hexagonal by default, for the same reason `hex_bin()` uses one:
+its cells have neighbours all at equal distance, so thinning is not subtly
+directional. `type = "grid"` gives squares if you need to match an existing
+workflow.
+
+## Comparing two predicted distributions
+
+`niche_overlap()` asks how much two suitability surfaces have in common — two
+species, two seasons, or the same species under two scenarios.
+
+```{r overlap}
+scenario.a <- ensemble_summary(ensemble, "mean")
+scenario.b <- scenario.a * 0.9 + 0.05
+
+niche_overlap(scenario.a, scenario.b)
+```
+
+Both statistics run from 0 to 1, and both rescale each surface to sum to 1
+first — so what is compared is the *shape* of each distribution, not its level.
+A model predicting uniformly higher suitability can still overlap another
+perfectly. Schoener's **D** uses absolute differences; Warren's **I** uses square
+roots and is less moved by a handful of cells where the two disagree sharply.
+
+Neither is a test. Two surfaces built from the same covariates over the same
+domain will overlap substantially whatever the species do, so a D of 0.7 means
+little on its own. `niche_equivalency()` supplies the missing reference
+distribution by pooling the two sets of occurrences, splitting them at random,
+and refitting:
+
+```{r equivalency}
+set.seed(1)
+cold <- data.frame(temp = rnorm(60, 8, 1.5))
+warm <- data.frame(temp = rnorm(60, 14, 1.5))
+
+axis <- seq(0, 20, length.out = 50)
+fit_density <- function(occurrence) {
+  dnorm(axis, mean(occurrence$temp), sd(occurrence$temp))
+}
+
+result <- niche_equivalency(cold, warm, fit_density, n.rep = 99)
+c(observed = result$observed, null.median = median(result$null),
+  p = result$p.value)
+```
+
+The observed overlap being *lower* than the null is the informative result: the
+two groups occupy measurably different environments. An overlap sitting inside
+the null distribution means the data cannot distinguish them — which is not the
+same as showing they are the same.
+
+`fit` is called `2 * n.rep` times, so a slow model makes a slow test. That cost
+is inherent: the null has to come from the same fitting procedure as the
+observation, or it is testing something else.
+
 ## The numbers underneath
 
 Both maps have a computational half that returns a raster, if you would rather

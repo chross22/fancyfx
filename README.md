@@ -227,6 +227,32 @@ eye-catching departures from the diagonal are often the least
 trustworthy points on the plot. The rug and the interval on each bin
 both say so.
 
+`calc_deviance()` covers what AUC cannot: AUC only cares about ranking
+and will not notice predictions that are ordered correctly but wrong.
+Deviance penalises confident mistakes hardest, and against the null
+deviance gives the proportion explained that boosted-regression-tree
+work reports as standard.
+
+### Is the hold-out actually independent?
+
+`spatial_sorting_bias()` checks the assumption every metric above rests
+on. It is the ratio of two mean nearest-neighbour distances — test
+presences to training presences, over test absences to training
+presences.
+
+``` r
+spatial_sorting_bias(test.presences, test.absences, training.presences)
+#>  presence   absence       ssb
+#>     0.381    20.434     0.019
+```
+
+Near 1, the split is doing its job. Near 0, the test presences sit much
+closer to the training data than the absences do, and a model can score
+well on proximity alone — its AUC is measuring the split rather than the
+species. This is the quantity behind the cross-validation warnings
+above: they say the problem exists, this says how bad it is for your
+split.
+
 ### Evaluation data is required, on purpose
 
 `newdata` is a required argument, and passing the training data warns
@@ -305,8 +331,13 @@ that the model has nothing to say about it.
 outside the training range of at least one covariate. It works one
 covariate at a time, though, so it cannot see novel *combinations* of
 individually ordinary values — treat a clean surface as the absence of
-one specific problem, not permission to project. See
-`vignette("spatial")`.
+one specific problem, not permission to project.
+
+Also here: `hex_bin()` and `plotHexbin()` aggregate a raster or point
+data into a hexagonal lattice; `thin_points()` thins records where
+clustering reflects survey effort rather than the species; and
+`niche_overlap()` with `niche_equivalency()` compare two predicted
+distributions against a randomisation null. See `vignette("spatial")`.
 
 ## Supported models
 

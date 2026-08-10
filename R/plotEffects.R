@@ -150,8 +150,10 @@ plotEffects <- function(model, dat, var, xlab = var, ylab = NULL,
   transform <- check_transform(transform)
   rug.type <- check_choice(rug.type, c("histogram", "density"), "type")
 
+  # dat is passed on as a fallback range for models that do not keep the data
+  # they were fitted on; it is already to hand for the rug.
   est <- effect_estimates(model, var, scale = scale, interval = interval,
-                          level = level, n = n, ...)
+                          level = level, n = n, data = dat, ...)
 
   # Set from the frame rather than from `scale`, so the label always names the
   # quantity that was actually computed -- including when a GAM asked for the

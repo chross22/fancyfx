@@ -82,7 +82,10 @@ Other spatial plots:
 \code{\link[=ensemble_summary]{ensemble_summary()}},
 \code{\link[=hex_bin]{hex_bin()}},
 \code{\link[=mess]{mess()}},
+\code{\link[=niche_equivalency]{niche_equivalency()}},
+\code{\link[=niche_overlap]{niche_overlap()}},
 \code{\link[=plotExtrapolation]{plotExtrapolation()}},
-\code{\link[=plotUncertainty]{plotUncertainty()}}
+\code{\link[=plotUncertainty]{plotUncertainty()}},
+\code{\link[=thin_points]{thin_points()}}
 }
 \concept{spatial plots}

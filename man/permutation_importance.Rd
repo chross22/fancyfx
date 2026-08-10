@@ -87,11 +87,13 @@ Breiman, L. (2001). Random forests. \emph{Machine Learning}, 45(1), 5-32.
 effect rather than its weight.
 
 Other evaluation plots:
+\code{\link[=calc_deviance]{calc_deviance()}},
 \code{\link[=calibration_estimates]{calibration_estimates()}},
 \code{\link[=plotCalibration]{plotCalibration()}},
 \code{\link[=plotImportance]{plotImportance()}},
 \code{\link[=plotROC]{plotROC()}},
 \code{\link[=plotThreshold]{plotThreshold()}},
+\code{\link[=spatial_sorting_bias]{spatial_sorting_bias()}},
 \code{\link[=threshold_metrics]{threshold_metrics()}}
 }
 \concept{evaluation plots}

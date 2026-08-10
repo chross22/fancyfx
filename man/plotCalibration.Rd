@@ -86,11 +86,13 @@ plotCalibration(fit, dat[301:600, ])
 discrimination, which is a different question.
 
 Other evaluation plots:
+\code{\link[=calc_deviance]{calc_deviance()}},
 \code{\link[=calibration_estimates]{calibration_estimates()}},
 \code{\link[=permutation_importance]{permutation_importance()}},
 \code{\link[=plotImportance]{plotImportance()}},
 \code{\link[=plotROC]{plotROC()}},
 \code{\link[=plotThreshold]{plotThreshold()}},
+\code{\link[=spatial_sorting_bias]{spatial_sorting_bias()}},
 \code{\link[=threshold_metrics]{threshold_metrics()}}
 }
 \concept{evaluation plots}

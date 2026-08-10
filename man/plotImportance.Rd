@@ -77,11 +77,13 @@ plotImportance(fit, dat[201:400, ], n.perm = 5)
 shape of each effect.
 
 Other evaluation plots:
+\code{\link[=calc_deviance]{calc_deviance()}},
 \code{\link[=calibration_estimates]{calibration_estimates()}},
 \code{\link[=permutation_importance]{permutation_importance()}},
 \code{\link[=plotCalibration]{plotCalibration()}},
 \code{\link[=plotROC]{plotROC()}},
 \code{\link[=plotThreshold]{plotThreshold()}},
+\code{\link[=spatial_sorting_bias]{spatial_sorting_bias()}},
 \code{\link[=threshold_metrics]{threshold_metrics()}}
 }
 \concept{evaluation plots}

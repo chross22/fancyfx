@@ -231,6 +231,42 @@ The spread across folds is the part worth reading. If the AUC range is wide, or
 the TSS-maximising cutoff moves substantially between folds, then reporting a
 single threshold to three decimal places is false precision.
 
+## How independent is the hold-out, really?
+
+Everything above assumes the evaluation data tells you something the training
+data did not. `spatial_sorting_bias()` checks that assumption instead of taking
+it on faith.
+
+The statistic is the ratio of two mean nearest-neighbour distances: from each
+test presence to the closest training presence, over the same for each test
+absence.
+
+```{r ssb}
+set.seed(1)
+training <- cbind(runif(150, 0, 10), runif(150, 0, 10))
+
+# A split whose presences sit on top of the training data
+near <- cbind(runif(60, 0, 10), runif(60, 0, 10))
+background <- cbind(runif(60, 0, 40), runif(60, 0, 40))
+
+spatial_sorting_bias(near, background, training)
+```
+
+Near 1 means the test presences and test absences are equally far from the
+training data — the split is doing its job. Near 0 means the presences are much
+closer, and a model can score well by knowing roughly where the training data
+was without knowing anything about the species. Its AUC is then measuring the
+split rather than the species.
+
+This is what the cross-validation warnings elsewhere in the package are about.
+They say the problem exists; this says how bad it is for a particular split,
+which is the version worth putting in a methods section. Pass `geo = TRUE` for
+longitude and latitude, and distances become great-circle.
+
+A low value is not a reason to throw the model away. It is a reason to use
+spatially blocked folds, or to sample the test absences to match the presences'
+distance distribution — and then to say which you did.
+
 ## Variable importance
 
 Which predictors is the model actually leaning on?
