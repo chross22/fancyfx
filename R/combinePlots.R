@@ -17,6 +17,10 @@
 #' @param n Number of points at which to evaluate each effect.
 #' @param rug.type Type of rug plot to draw above each effect.
 #' @param bins Number of bins for a histogram rug.
+#' @param labels Panel labels: `"A"` (the default) for upper-case letters, `"a"`
+#'   for lower-case, `"1"` for numbers, `"none"` for none, or a character vector
+#'   used verbatim, one per panel.
+#' @param common.legend Whether the panels share one legend.
 #' @param ... Passed through to [plotEffects()] and on to the backend.
 #'
 #' @return The arranged effect plots.
@@ -44,6 +48,8 @@ combinePlots <- function(model, dat, vars, title = "",
                          n = 100,
                          rug.type = c("histogram", "density"),
                          bins = 30,
+                         labels = "A",
+                         common.legend = TRUE,
                          ...) {
 
   rug.type <- check_choice(rug.type, c("histogram", "density"), "type")
@@ -51,22 +57,14 @@ combinePlots <- function(model, dat, vars, title = "",
   interval <- check_interval(interval)
   check_level(level)
 
-  # One transform for all variables, or one each. Recycled explicitly rather
-  # than by R's rules, so a length that divides into `vars` but was not meant
-  # to be recycled is an error rather than a silently rearranged plot.
+  # One transform for all variables, or one each.
   if (identical(var.transform, c("none", "log", "log10", "sqrt"))) {
     var.transform <- "none"
   }
   var.transform <- vapply(var.transform, check_transform, character(1),
                           USE.NAMES = FALSE)
-  if (length(var.transform) == 1) {
-    var.transform <- rep(var.transform, length(vars))
-  }
-  if (length(var.transform) != length(vars)) {
-    stop("var.transform must be one value, or one per variable in vars: ",
-         length(vars), " expected, ", length(var.transform), " given.",
-         call. = FALSE)
-  }
+  var.transform <- recycle_to(var.transform, length(vars),
+                              "var.transform", "variable in vars")
 
   effect.plots <- lapply(seq_along(vars), function(i) {
     plotEffects(model, dat, vars[[i]],
@@ -77,8 +75,8 @@ combinePlots <- function(model, dat, vars, title = "",
   })
 
   arranged <- ggpubr::ggarrange(plotlist = effect.plots,
-                                common.legend = TRUE,
-                                labels = letters[seq_along(vars)])
+                                common.legend = common.legend,
+                                labels = panel_labels(labels, length(vars)))
 
   ggpubr::annotate_figure(arranged, top = title)
 }

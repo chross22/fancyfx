@@ -19,6 +19,10 @@
 #'   confidence interval at `level`.
 #' @param level Confidence level, used when `interval = "ci"`.
 #' @param n Number of points at which to evaluate the effect.
+#' @param re.form For a mixed model, which random effects to include. `NA` (the
+#'   default) gives the population-level effect; `NULL` includes all of them.
+#'   Not forwarded to models without random effects, which would reject it.
+#'   Note that standard errors cover the fixed effects only either way.
 #' @param ... Passed to the underlying backend
 #'   ([gratia::smooth_estimates()] or [marginaleffects::predictions()]).
 #'
@@ -125,8 +129,33 @@ effect_estimates.gam <- function(model, var,
     estimate = est$.estimate,
     lower = est$.estimate - mult * est$.se,
     upper = est$.estimate + mult * est$.se,
-    quantity = "Partial Effect"
+    quantity = "Partial Effect",
+    group = smooth_group(est)
   )
+}
+
+#' Identify the factor a set of smooths is split by
+#'
+#' A factor-smooth interaction -- `s(x, by = f)` -- is one smooth per level of
+#' `f`, and `gratia` returns them stacked in a single frame. Without separating
+#' them, `geom_line()` joins the end of one level's curve to the start of the
+#' next and draws a zigzag that looks like a single wildly varying smooth.
+#'
+#' @param est A `gratia::smooth_estimates()` frame, as a data frame.
+#' @return A factor of level labels, or `NULL` when the smooth is not split.
+#' @keywords internal
+smooth_group <- function(est) {
+  # gratia names the by-variable in .by, and carries its values in a column of
+  # that name. .by is NA for an ordinary smooth.
+  if (!(".by" %in% names(est))) return(NULL)
+  by.var <- unique(stats::na.omit(est$.by))
+  if (length(by.var) != 1 || !(by.var %in% names(est))) return(NULL)
+
+  out <- factor(est[[by.var]])
+  # Carried so the legend can be titled with the factor's own name rather than
+  # the internal ".group".
+  attr(out, "label") <- by.var
+  out
 }
 
 #' @rdname effect_estimates
@@ -136,6 +165,7 @@ effect_estimates.default <- function(model, var,
                                      interval = c("se", "ci"),
                                      level = 0.95,
                                      n = 100,
+                                     re.form = NA,
                                      ...) {
   # NextMethod() from the gam method arrives with these already checked and
   # collapsed to a single value; checking again is harmless and keeps this
@@ -158,9 +188,16 @@ effect_estimates.default <- function(model, var,
   grid.args[[var]] <- grid
   newdata <- do.call(marginaleffects::datagrid, grid.args)
 
-  est <- as.data.frame(
-    predict_on_scale(model, newdata, scale, interval, level, ...)
-  )
+  # re.form is meaningless to a model with no random effects, and passing it
+  # to one is an error rather than a no-op, so it is only forwarded when the
+  # model actually has them.
+  if (has_random_effects(model)) {
+    est <- predict_on_scale(model, newdata, scale, interval, level,
+                            re.form = re.form, ...)
+  } else {
+    est <- predict_on_scale(model, newdata, scale, interval, level, ...)
+  }
+  est <- as.data.frame(est)
 
   # marginaleffects reports a confidence interval whatever we asked for, so a
   # "se" ribbon is rebuilt from std.error rather than read off conf.low/high.
@@ -196,9 +233,27 @@ effect_estimates.default <- function(model, var,
 #' @return The `predictions` object.
 #' @keywords internal
 predict_on_scale <- function(model, newdata, scale, interval, level, ...) {
+  dots <- list(...)
+  # marginaleffects warns that its standard errors cover only fixed-effect
+  # uncertainty, and says so is "often appropriate when re.form=NA" -- which is
+  # exactly the case we default to. Firing that on every panel of every plot is
+  # noise, so it is muffled only when re.form is in fact NA. A caller who sets
+  # re.form to anything else still hears it, which is when it matters.
+  quiet <- "re.form" %in% names(dots) && length(dots$re.form) == 1 &&
+    is.na(dots$re.form)
+
   predict_with <- function(type) {
-    marginaleffects::predictions(model, newdata = newdata, type = type,
-                                 conf_level = level, ...)
+    call_backend <- function() {
+      marginaleffects::predictions(model, newdata = newdata, type = type,
+                                   conf_level = level, ...)
+    }
+    if (!quiet) return(call_backend())
+    withCallingHandlers(call_backend(), warning = function(w) {
+      if (grepl("only takes into account the uncertainty in fixed-effect",
+                conditionMessage(w), fixed = TRUE)) {
+        invokeRestart("muffleWarning")
+      }
+    })
   }
   unsupported_type <- function(e) {
     grepl("type", conditionMessage(e), fixed = TRUE)
@@ -242,17 +297,45 @@ predict_on_scale <- function(model, newdata, scale, interval, level, ...) {
 #'
 #' @param x,estimate,lower,upper Equal-length numeric vectors.
 #' @param quantity What was computed, for the y-axis label.
-#' @return A data frame ordered by `.x`, with `quantity` attached.
+#' @param group Optional factor splitting the effect into separate curves, as
+#'   for a factor-smooth interaction. `NULL` for a single curve.
+#' @return A data frame ordered by `.x` within `.group`, with `quantity`
+#'   attached.
 #' @keywords internal
-standardize_effect <- function(x, estimate, lower, upper, quantity) {
+standardize_effect <- function(x, estimate, lower, upper, quantity,
+                               group = NULL) {
   out <- data.frame(.x = x, .estimate = estimate,
                     .lower = lower, .upper = upper)
+  group.label <- attr(group, "label")
+  if (!is.null(group)) out$.group <- group
+
   # Sorted because geom_line() connects points in row order, and a backend that
   # returned an unsorted grid would draw a curve that doubles back on itself.
-  out <- out[order(out$.x), , drop = FALSE]
+  # Within group, so separate curves are not interleaved.
+  out <- if (is.null(group)) {
+    out[order(out$.x), , drop = FALSE]
+  } else {
+    out[order(out$.group, out$.x), , drop = FALSE]
+  }
   rownames(out) <- NULL
   attr(out, "quantity") <- quantity
+  attr(out, "group.label") <- group.label
   out
+}
+
+#' Does this model have random effects?
+#'
+#' Checked by class rather than by inspecting the fit, because the answer is
+#' needed before any prediction is attempted. Covers the mixed-model packages
+#' \pkg{marginaleffects} supports and this package has been tested against.
+#'
+#' @param model A fitted model.
+#' @return `TRUE` for a mixed model, `FALSE` otherwise.
+#' @keywords internal
+has_random_effects <- function(model) {
+  inherits(model, c("merMod", "lmerMod", "glmerMod", "nlmerMod", "lmerModLmerTest",
+                    "glmmTMB", "lme", "nlme", "glmmadmb", "MixMod",
+                    "brmsfit", "stanreg"))
 }
 
 #' Recover a predictor's observed values from a fitted model

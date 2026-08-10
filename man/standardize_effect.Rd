@@ -4,15 +4,19 @@
 \alias{standardize_effect}
 \title{Assemble the standardized effect frame}
 \usage{
-standardize_effect(x, estimate, lower, upper, quantity)
+standardize_effect(x, estimate, lower, upper, quantity, group = NULL)
 }
 \arguments{
 \item{x, estimate, lower, upper}{Equal-length numeric vectors.}
 
 \item{quantity}{What was computed, for the y-axis label.}
+
+\item{group}{Optional factor splitting the effect into separate curves, as
+for a factor-smooth interaction. \code{NULL} for a single curve.}
 }
 \value{
-A data frame ordered by \code{.x}, with \code{quantity} attached.
+A data frame ordered by \code{.x} within \code{.group}, with \code{quantity}
+attached.
 }
 \description{
 Assemble the standardized effect frame

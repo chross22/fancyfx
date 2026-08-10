@@ -33,6 +33,7 @@ effect_estimates(
   interval = c("se", "ci"),
   level = 0.95,
   n = 100,
+  re.form = NA,
   ...
 )
 }
@@ -55,6 +56,11 @@ confidence interval at \code{level}.}
 
 \item{...}{Passed to the underlying backend
 (\code{\link[gratia:smooth_estimates]{gratia::smooth_estimates()}} or \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}).}
+
+\item{re.form}{For a mixed model, which random effects to include. \code{NA} (the
+default) gives the population-level effect; \code{NULL} includes all of them.
+Not forwarded to models without random effects, which would reject it.
+Note that standard errors cover the fixed effects only either way.}
 }
 \value{
 A data frame with four columns -- \code{.x}, \code{.estimate}, \code{.lower},

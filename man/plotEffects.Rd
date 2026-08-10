@@ -17,6 +17,10 @@ plotEffects(
   transform = c("none", "log", "log10", "sqrt"),
   rug.type = c("histogram", "density"),
   bins = 30,
+  group.lab = NULL,
+  theme = theme_fancyfx(),
+  palette = fancyfx_palette(),
+  linewidth = 0.8,
   ...
 )
 }
@@ -58,8 +62,23 @@ if applicable. Applied to both the curve and the rug, so they stay aligned.}
 
 \item{bins}{Number of bins for a histogram rug.}
 
+\item{group.lab}{Legend title used when the effect splits into several
+curves, as for a factor-smooth interaction. Defaults to the name of the
+factor doing the splitting.}
+
+\item{theme}{A \pkg{ggplot2} theme for the effect panel. Defaults to
+\code{\link[=theme_fancyfx]{theme_fancyfx()}}, a publication-ready theme built on
+\code{\link[ggpubr:theme_pubr]{ggpubr::theme_pubr()}}. Any other theme can be passed instead.}
+
+\item{palette}{Colours used when the effect splits into several curves.
+Defaults to \code{\link[=fancyfx_palette]{fancyfx_palette()}}, which is colour-vision-deficiency safe.}
+
+\item{linewidth}{Width of the effect line.}
+
 \item{...}{Passed through to the backend, \code{\link[gratia:smooth_estimates]{gratia::smooth_estimates()}} or
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}.}
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}. For a mixed model this is where
+\code{re.form} goes: it defaults to \code{NA}, meaning the effect is drawn at the
+population level rather than for one arbitrary group. See Details.}
 }
 \value{
 A \code{patchwork} object: the rug above, the effect curve below.
@@ -90,6 +109,18 @@ does not.
 Note that the default \code{interval = "se"} ribbon spans roughly 68\%, not 95\%.
 It is the historical default of this package; pass \code{interval = "ci"} for a
 conventional confidence interval.
+
+A \strong{factor-smooth interaction}, \code{s(x, by = f)}, is one smooth per level of
+\code{f}. Those are drawn as separate coloured curves with a legend, rather than
+joined end to end into a single zigzagging line.
+
+For a \strong{mixed model}, \code{re.form} defaults to \code{NA}, so the effect is drawn at
+the population level. This matters: left to the backend's own default, the
+grouping factor is held at its modal level and the plot silently shows the
+effect for one arbitrary group rather than the average one. Pass
+\code{re.form = NULL} to include the random effects. Note that the ribbon
+reflects uncertainty in the fixed effects only -- it does not widen to
+account for variation between groups.
 
 On the response scale, \code{interval = "ci"} is built on the link scale and
 back-transformed, so it stays within the range the response admits -- a
@@ -128,6 +159,7 @@ for the rug on its own, and \code{\link[mgcv:gam]{mgcv::gam()}} or
 
 Other effect plots:
 \code{\link[=combinePlots]{combinePlots()}},
+\code{\link[=comparePlots]{comparePlots()}},
 \code{\link[=plotRugs]{plotRugs()}},
 \code{\link[=plotSmooths]{plotSmooths()}}
 }

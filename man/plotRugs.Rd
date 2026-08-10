@@ -9,7 +9,8 @@ plotRugs(
   var,
   type = c("histogram", "density"),
   transform = c("none", "log", "log10", "sqrt"),
-  bins = 30
+  bins = 30,
+  fill = "grey35"
 )
 }
 \arguments{
@@ -24,6 +25,10 @@ plotRugs(
 \item{bins}{Number of histogram bins. Set explicitly rather than left to
 \code{geom_histogram()}'s default, which is the same 30 but emits a message
 about it on every plot. Ignored when \code{type} is \code{"density"}.}
+
+\item{fill}{Fill colour for the rug. Deliberately a neutral grey: the rug
+reports where the data is, and should not compete with the effect curve
+below it for attention.}
 }
 \value{
 The rug plot from dat for var
@@ -43,6 +48,7 @@ plotRugs(mtcars, "disp", transform = "log10", bins = 15)
 
 Other effect plots:
 \code{\link[=combinePlots]{combinePlots()}},
+\code{\link[=comparePlots]{comparePlots()}},
 \code{\link[=plotEffects]{plotEffects()}},
 \code{\link[=plotSmooths]{plotSmooths()}}
 }

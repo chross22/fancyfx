@@ -60,6 +60,7 @@ plotEffects(gam.fit, iris, "Sepal.Length")
 
 Other effect plots:
 \code{\link[=combinePlots]{combinePlots()}},
+\code{\link[=comparePlots]{comparePlots()}},
 \code{\link[=plotEffects]{plotEffects()}},
 \code{\link[=plotRugs]{plotRugs()}}
 }

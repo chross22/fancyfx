@@ -16,6 +16,8 @@ combinePlots(
   n = 100,
   rug.type = c("histogram", "density"),
   bins = 30,
+  labels = "A",
+  common.legend = TRUE,
   ...
 )
 }
@@ -44,6 +46,12 @@ value used for every variable, or one per entry in \code{vars}.}
 
 \item{bins}{Number of bins for a histogram rug.}
 
+\item{labels}{Panel labels: \code{"A"} (the default) for upper-case letters, \code{"a"}
+for lower-case, \code{"1"} for numbers, \code{"none"} for none, or a character vector
+used verbatim, one per panel.}
+
+\item{common.legend}{Whether the panels share one legend.}
+
 \item{...}{Passed through to \code{\link[=plotEffects]{plotEffects()}} and on to the backend.}
 }
 \value{
@@ -70,6 +78,7 @@ combinePlots(lm.fit, mtcars, vars = c("wt", "hp"), rug.type = "density")
 means under each model type.
 
 Other effect plots:
+\code{\link[=comparePlots]{comparePlots()}},
 \code{\link[=plotEffects]{plotEffects()}},
 \code{\link[=plotRugs]{plotRugs()}},
 \code{\link[=plotSmooths]{plotSmooths()}}

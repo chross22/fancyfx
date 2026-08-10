@@ -10,6 +10,9 @@
 #' @param bins Number of histogram bins. Set explicitly rather than left to
 #'   `geom_histogram()`'s default, which is the same 30 but emits a message
 #'   about it on every plot. Ignored when `type` is `"density"`.
+#' @param fill Fill colour for the rug. Deliberately a neutral grey: the rug
+#'   reports where the data is, and should not compete with the effect curve
+#'   below it for attention.
 #' @return The rug plot from dat for var
 #'
 #' @family effect plots
@@ -23,7 +26,7 @@
 #' @export
 plotRugs <- function(dat, var, type = c("histogram", "density"),
                      transform = c("none", "log", "log10", "sqrt"),
-                     bins = 30) {
+                     bins = 30, fill = "grey35") {
 
   # Checked here rather than left to the switch() inside aes(). aes() is lazy,
   # so an invalid value would otherwise sail through until the plot was drawn
@@ -40,10 +43,14 @@ plotRugs <- function(dat, var, type = c("histogram", "density"),
   if (type == "histogram") {
     return(ggplot2::ggplot(data = dat) +
              ggplot2::theme_void() +
-             ggplot2::geom_histogram(mapping = mapping, bins = bins, alpha = 0.5))
+             ggplot2::geom_histogram(mapping = mapping, bins = bins,
+                                     fill = fill, colour = NA))
   }
 
+  # Filled rather than left as a bare outline, so the two rug types read the
+  # same weight above the curve. geom_density() takes no fill unless told, and
+  # alpha alone does nothing to an unfilled shape.
   ggplot2::ggplot(data = dat) +
     ggplot2::theme_void() +
-    ggplot2::geom_density(mapping = mapping, alpha = 0.5)
+    ggplot2::geom_density(mapping = mapping, fill = fill, colour = NA)
 }

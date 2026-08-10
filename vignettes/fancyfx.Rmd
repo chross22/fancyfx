@@ -87,6 +87,67 @@ plotEffects(glm.fit, mtcars, "wt",
             ylab = "P(manual transmission)")
 ```
 
+## Factor-smooth interactions
+
+A factor-smooth interaction, `s(x, by = f)`, is not one smooth but one per level
+of `f`. They are drawn as separate curves with a legend:
+
+```{r factor-smooth}
+by.species <- mgcv::gam(Petal.Length ~ s(Sepal.Length, by = Species) + Species,
+                        data = iris)
+
+plotEffects(by.species, iris, "Sepal.Length",
+            xlab = "Sepal length (cm)")
+```
+
+Note the rug is shared: it shows the distribution of `Sepal.Length` overall, not
+per species. A level with few observations will have a wide ribbon, which is the
+signal to look for.
+
+## Comparing models
+
+`combinePlots()` holds the model fixed and varies the predictor.
+`comparePlots()` does the opposite, which is how you ask whether a modelling
+choice was worth making:
+
+```{r compare, fig.height = 4}
+plain <- mgcv::gam(Petal.Length ~ s(Sepal.Length), data = iris)
+
+comparePlots(list("Single smooth" = plain,
+                  "Smooth by species" = by.species),
+             iris, "Sepal.Length",
+             title = "Is a factor-smooth interaction worth it?")
+```
+
+Panels are titled from the list's names, and labelled `A`, `B`, `C`. Models need
+not share a class — but see the caveat below about comparing a partial effect
+against a prediction.
+
+## Mixed models
+
+`lme4` and `glmmTMB` fits go through the same backend as any other non-GAM
+model. The one thing worth knowing is what happens to the random effects:
+
+```{r mixed, eval = requireNamespace("lme4", quietly = TRUE)}
+set.seed(1)
+d <- data.frame(g = rep(letters[1:8], each = 25), x = runif(200, 1, 10))
+d$y <- 2 * d$x + rep(rnorm(8, 0, 5), each = 25) + rnorm(200)
+
+fit <- lme4::lmer(y ~ x + (1 | g), data = d)
+
+plotEffects(fit, d, "x")
+```
+
+`re.form` defaults to `NA`, so the curve is the **population-level** effect.
+This is not a cosmetic default. Left to the backend's own, the grouping factor
+is held at its modal level, and the plot silently shows the effect for whichever
+group happens to be most common — a different curve entirely. Pass
+`re.form = NULL` to include the random effects.
+
+One limitation to state plainly: the ribbon reflects uncertainty in the fixed
+effects only. It does not widen to account for variation between groups, so it
+is narrower than a genuine prediction interval for a new group.
+
 ## What the y axis means
 
 This is the section worth reading before you put a `fancyfx` figure in a paper.
@@ -161,9 +222,22 @@ plotEffects(lm.fit, mtcars, "hp",
 
 Rugs come in two styles. `"histogram"` (the default) shows counts and reads well
 for moderate sample sizes; `"density"` is smoother and works better when the
-data are dense enough that a histogram becomes noisy.
+data are dense enough that a histogram becomes noisy. Side by side:
 
-```{r rug-types}
+```{r rug-types, fig.height = 4}
+ggpubr::ggarrange(
+  plotEffects(lm.fit, mtcars, "wt", rug.type = "histogram",
+              xlab = "Weight (1000 lbs)"),
+  plotEffects(lm.fit, mtcars, "wt", rug.type = "density",
+              xlab = "Weight (1000 lbs)"),
+  labels = c("A", "B")
+)
+```
+
+`plotRugs()` will also give you the rug on its own, if you would rather compose
+the figure yourself:
+
+```{r rug-alone, fig.height = 1.5}
 plotRugs(mtcars, "wt", type = "density")
 ```
 
@@ -172,6 +246,62 @@ plotRugs(mtcars, "wt", type = "density")
 ```{r per-var-transform}
 combinePlots(lm.fit, mtcars, vars = c("wt", "hp"),
              var.transform = c("none", "log10"))
+```
+
+## Publication-ready output
+
+The default theme is `theme_fancyfx()`, built on `ggpubr::theme_pubr()`: no
+background panel, no grid, plain black axis lines, and text sized to survive
+being shrunk into a journal column.
+
+The main thing to adjust is `base_size`, and the reason is not obvious: a figure
+saved narrow gets scaled *up* on the page, so its text ends up smaller than the
+same text in a wide figure. Set the size to match the width you will save at.
+
+```{r theme-size, fig.height = 4}
+plotEffects(lm.fit, mtcars, "wt",
+            xlab = "Weight (1000 lbs)",
+            theme = theme_fancyfx(base_size = 14))
+```
+
+Any other ggplot2 theme can be passed instead:
+
+```r
+plotEffects(lm.fit, mtcars, "wt", theme = ggplot2::theme_minimal())
+```
+
+Panels are labelled `A`, `B`, `C` by default. Journals vary, so the style is an
+argument:
+
+```r
+combinePlots(fit, dat, vars, labels = "a")                     # a, b, c
+combinePlots(fit, dat, vars, labels = "1")                     # 1, 2, 3
+combinePlots(fit, dat, vars, labels = "none")                  # no labels
+combinePlots(fit, dat, vars, labels = c("Panel one", "Panel two"))
+```
+
+### The palette
+
+Curves that split by a factor use `fancyfx_palette()`:
+
+```{r palette}
+fancyfx_palette()
+```
+
+It was chosen by search rather than by eye, against the properties that decide
+whether a reader can actually tell two curves apart: every colour sits in a mid
+lightness band, carries enough chroma not to read as grey, clears 3:1 contrast
+against a white page, and stays separable under simulated protanopia and
+deuteranopia. A legend is always drawn, so identity never rests on colour alone.
+
+Six is the limit. Past that, colours stop being tellable apart however they are
+chosen, and `plotEffects()` says so rather than inventing a seventh — a facet
+per level communicates far better.
+
+Saving at a fixed size, as a journal will ask for:
+
+```r
+ggplot2::ggsave("figure-1.pdf", p, width = 174, height = 100, units = "mm")
 ```
 
 ## Migrating from fancygam

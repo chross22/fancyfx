@@ -80,17 +80,85 @@ plotEffects(glm.fit, mtcars, "wt",
             ylab = "P(manual transmission)")
 ```
 
+## Comparing models
+
+`comparePlots()` holds the variable fixed and varies the *model*, which is how
+you check whether a modelling choice bought you anything. A factor-smooth
+interaction is drawn as one curve per level, with a colourblind-safe palette
+and a legend:
+
+```{r fancyfx-compare, fig.height = 4}
+plain <- mgcv::gam(Petal.Length ~ s(Sepal.Length), data = iris)
+by.species <- mgcv::gam(Petal.Length ~ s(Sepal.Length, by = Species) + Species,
+                        data = iris)
+
+comparePlots(list("Single smooth" = plain,
+                  "Smooth by species" = by.species),
+             iris, "Sepal.Length",
+             title = "Is a factor-smooth interaction worth it?")
+```
+
+## Rug styles
+
+`rug.type` picks how the raw data is summarised above the curve. A histogram
+shows counts and reads well at moderate sample sizes; a density is smoother and
+works better when a histogram would be noisy.
+
+```{r fancyfx-rugs, fig.height = 4}
+lm.fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+ggpubr::ggarrange(
+  plotEffects(lm.fit, mtcars, "wt", rug.type = "histogram",
+              xlab = "Weight (1000 lbs)"),
+  plotEffects(lm.fit, mtcars, "wt", rug.type = "density",
+              xlab = "Weight (1000 lbs)"),
+  labels = c("A", "B")
+)
+```
+
+## Publication-ready by default
+
+Plots use `theme_fancyfx()`, built on `ggpubr::theme_pubr()`: no background
+panel, no grid, plain axis lines, and text sized to survive being shrunk into a
+column. Panels are labelled `A`, `B`, `C` by default.
+
+```r
+# Bigger text for a narrow figure
+plotEffects(fit, dat, "x", theme = theme_fancyfx(base_size = 14))
+
+# Lower-case, numbered, none, or your own
+combinePlots(fit, dat, vars, labels = "a")
+combinePlots(fit, dat, vars, labels = "1")
+combinePlots(fit, dat, vars, labels = "none")
+combinePlots(fit, dat, vars, labels = c("Panel one", "Panel two"))
+
+# Any other ggplot2 theme works too
+plotEffects(fit, dat, "x", theme = ggplot2::theme_minimal())
+```
+
+Curves that split by a factor use `fancyfx_palette()`, a six-colour categorical
+palette chosen by search rather than by eye: every colour sits in a mid
+lightness band, clears 3:1 contrast against a white page, and stays separable
+under simulated protanopia and deuteranopia.
+
 ## Supported models
 
 | Model | Backend | What you get |
 |---|---|---|
 | `mgcv::gam()`, `bam()` | `gratia` | Partial effect, link scale, centered |
 | `lm()`, `glm()` | `marginaleffects` | Predicted values |
+| `lme4::lmer()`, `glmer()` | `marginaleffects` | Predicted values, population level |
+| `glmmTMB::glmmTMB()` | `marginaleffects` | Predicted values, population level |
 | Most other fitted models | `marginaleffects` | Predicted values |
 
-Support beyond `lm`/`glm` comes from whatever `marginaleffects` handles, and is
-being verified model family by model family — mixed models next, then Bayesian
-fits.
+Support beyond those comes from whatever `marginaleffects` handles, and is
+being verified model family by model family — Bayesian fits next.
+
+For a **mixed model**, `re.form` defaults to `NA`, so the effect is drawn at the
+population level. This matters: left to the backend's own default, the grouping
+factor is held at its modal level and the plot silently shows the effect for one
+arbitrary group. Note that the ribbon covers uncertainty in the fixed effects
+only.
 
 ### A caveat worth reading
 

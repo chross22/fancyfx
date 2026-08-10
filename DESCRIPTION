@@ -24,7 +24,9 @@ Imports:
     rlang,
     stats
 Suggests:
+    glmmTMB,
     knitr,
+    lme4,
     mgcv,
     rmarkdown,
     testthat (>= 3.0.0)

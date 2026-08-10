@@ -30,8 +30,19 @@
 #'   if applicable. Applied to both the curve and the rug, so they stay aligned.
 #' @param rug.type Type of rug plot to draw above the effect.
 #' @param bins Number of bins for a histogram rug.
+#' @param group.lab Legend title used when the effect splits into several
+#'   curves, as for a factor-smooth interaction. Defaults to the name of the
+#'   factor doing the splitting.
+#' @param theme A \pkg{ggplot2} theme for the effect panel. Defaults to
+#'   [theme_fancyfx()], a publication-ready theme built on
+#'   [ggpubr::theme_pubr()]. Any other theme can be passed instead.
+#' @param palette Colours used when the effect splits into several curves.
+#'   Defaults to [fancyfx_palette()], which is colour-vision-deficiency safe.
+#' @param linewidth Width of the effect line.
 #' @param ... Passed through to the backend, [gratia::smooth_estimates()] or
-#'   [marginaleffects::predictions()].
+#'   [marginaleffects::predictions()]. For a mixed model this is where
+#'   `re.form` goes: it defaults to `NA`, meaning the effect is drawn at the
+#'   population level rather than for one arbitrary group. See Details.
 #'
 #' @details
 #' What gets plotted depends on the model, because the natural quantity differs:
@@ -52,6 +63,18 @@
 #' Note that the default `interval = "se"` ribbon spans roughly 68%, not 95%.
 #' It is the historical default of this package; pass `interval = "ci"` for a
 #' conventional confidence interval.
+#'
+#' A **factor-smooth interaction**, `s(x, by = f)`, is one smooth per level of
+#' `f`. Those are drawn as separate coloured curves with a legend, rather than
+#' joined end to end into a single zigzagging line.
+#'
+#' For a **mixed model**, `re.form` defaults to `NA`, so the effect is drawn at
+#' the population level. This matters: left to the backend's own default, the
+#' grouping factor is held at its modal level and the plot silently shows the
+#' effect for one arbitrary group rather than the average one. Pass
+#' `re.form = NULL` to include the random effects. Note that the ribbon
+#' reflects uncertainty in the fixed effects only -- it does not widen to
+#' account for variation between groups.
 #'
 #' On the response scale, `interval = "ci"` is built on the link scale and
 #' back-transformed, so it stays within the range the response admits -- a
@@ -98,6 +121,10 @@ plotEffects <- function(model, dat, var, xlab = var, ylab = NULL,
                         transform = c("none", "log", "log10", "sqrt"),
                         rug.type = c("histogram", "density"),
                         bins = 30,
+                        group.lab = NULL,
+                        theme = theme_fancyfx(),
+                        palette = fancyfx_palette(),
+                        linewidth = 0.8,
                         ...) {
 
   transform <- check_transform(transform)
@@ -111,20 +138,55 @@ plotEffects <- function(model, dat, var, xlab = var, ylab = NULL,
   # response scale got predictions instead of a partial effect.
   if (is.null(ylab)) ylab <- attr(est, "quantity")
 
-  var.plot <- ggplot2::ggplot(
-    est,
-    mapping = ggplot2::aes(x = switch(transform,
-                                      none = .data$.x,
-                                      log = log(.data$.x),
-                                      log10 = log10(.data$.x),
-                                      sqrt = sqrt(.data$.x)),
-                           y = .data$.estimate)) +
-    ggplot2::geom_ribbon(mapping = ggplot2::aes(ymin = .data$.lower,
-                                                ymax = .data$.upper),
-                         alpha = 0.5) +
-    ggplot2::geom_line() +
-    ggplot2::labs(x = xlab, y = ylab) +
-    ggplot2::theme_bw()
+  # A factor-smooth interaction, s(x, by = f), is one curve per level of f.
+  # They have to be told apart, or geom_line() joins the end of one level's
+  # curve to the start of the next and draws a zigzag.
+  grouped <- ".group" %in% names(est)
+  if (grouped && is.null(group.lab)) group.lab <- attr(est, "group.label")
+
+  if (grouped) {
+    base.aes <- ggplot2::aes(x = switch(transform,
+                                        none = .data$.x,
+                                        log = log(.data$.x),
+                                        log10 = log10(.data$.x),
+                                        sqrt = sqrt(.data$.x)),
+                             y = .data$.estimate,
+                             colour = .data$.group, group = .data$.group)
+    ribbon.aes <- ggplot2::aes(ymin = .data$.lower, ymax = .data$.upper,
+                               fill = .data$.group, group = .data$.group)
+  } else {
+    base.aes <- ggplot2::aes(x = switch(transform,
+                                        none = .data$.x,
+                                        log = log(.data$.x),
+                                        log10 = log10(.data$.x),
+                                        sqrt = sqrt(.data$.x)),
+                             y = .data$.estimate)
+    ribbon.aes <- ggplot2::aes(ymin = .data$.lower, ymax = .data$.upper)
+  }
+
+  var.plot <- ggplot2::ggplot(est, mapping = base.aes) +
+    ggplot2::geom_ribbon(mapping = ribbon.aes, alpha = 0.25, colour = NA) +
+    ggplot2::geom_line(linewidth = linewidth) +
+    ggplot2::labs(x = xlab, y = ylab,
+                  colour = group.lab, fill = group.lab) +
+    theme
+
+  if (grouped) {
+    levels.n <- nlevels(est$.group)
+    if (levels.n > length(palette)) {
+      # Past the palette's length, more hues stop being tellable apart. Say so
+      # and hand the scale back to ggplot2 rather than silently recycling
+      # colours, which would label two different levels identically.
+      warning("Effect splits into ", levels.n, " curves but the palette has ",
+              length(palette), " colours. Falling back to ggplot2's default ",
+              "scale -- consider a facet per level instead.", call. = FALSE)
+    } else {
+      pal <- palette[seq_len(levels.n)]
+      var.plot <- var.plot +
+        ggplot2::scale_colour_manual(values = pal) +
+        ggplot2::scale_fill_manual(values = pal)
+    }
+  }
 
   rug.plot <- plotRugs(dat = dat, var = var, type = rug.type,
                        transform = transform, bins = bins)
