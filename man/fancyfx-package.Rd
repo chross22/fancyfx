@@ -39,10 +39,12 @@ for a binary outcome and nothing else.
 rate, with AUC.}
 \item{\code{\link[=plotThreshold]{plotThreshold()}}}{Where to cut: sensitivity, specificity and TSS
 across every threshold.}
+\item{\code{\link[=plotCalibration]{plotCalibration()}}}{Whether the predicted probabilities are honest
+-- a separate question from discrimination, which AUC cannot answer.}
 \item{\code{\link[=plotImportance]{plotImportance()}}}{Which predictors the model is leaning on, by
 permutation.}
-\item{\code{\link[=threshold_metrics]{threshold_metrics()}}, \code{\link[=permutation_importance]{permutation_importance()}}}{The tidy numbers
-behind those.}
+\item{\code{\link[=threshold_metrics]{threshold_metrics()}}, \code{\link[=calibration_estimates]{calibration_estimates()}},
+\code{\link[=permutation_importance]{permutation_importance()}}}{The tidy numbers behind those.}
 }
 
 Every one of these requires evaluation data explicitly. Scoring a model on

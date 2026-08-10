@@ -158,10 +158,10 @@ and stays separable under simulated protanopia and deuteranopia.
 
 Effect plots say what a model claims. These say whether to believe it.
 
-`plotROC()` and `plotThreshold()` cover presence/absence models — the
-discrimination and cutoff questions respectively — and
-`plotImportance()` covers which predictors the model is actually leaning
-on.
+For presence/absence models, `plotROC()` covers discrimination,
+`plotThreshold()` covers where to cut, and `plotCalibration()` covers
+whether the probabilities are honest. `plotImportance()` covers which
+predictors the model is actually leaning on, for any model type.
 
 ``` r
 set.seed(1)
@@ -191,6 +191,30 @@ plotThreshold(sdm, test)
 ```
 
 <img src="man/figures/README-fancyfx-threshold-1.png" alt="" width="100%" />
+
+And neither says whether the probabilities themselves are *honest*.
+`plotCalibration()` does: a model that says 0.7 should be right about
+70% of the time.
+
+``` r
+plotCalibration(sdm, test)
+```
+
+<img src="man/figures/README-fancyfx-calibration-1.png" alt="" width="100%" />
+
+This is a genuinely separate question from discrimination, and AUC
+cannot answer it. AUC only cares about ranking, so it is unchanged by
+any monotone rescaling of the predictions — a model can post an
+excellent AUC while every probability it reports is far too extreme. If
+those probabilities feed a decision, an area calculation, or an expected
+count, calibration is the property that matters. The reported slope
+makes it concrete: 1 is perfect, below 1 means over-confident.
+
+Note the rug here too. Calibration is usually worst at the extremes, and
+the extremes usually hold the fewest predictions — so the most
+eye-catching departures from the diagonal are often the least
+trustworthy points on the plot. The rug and the interval on each bin
+both say so.
 
 ### Evaluation data is required, on purpose
 

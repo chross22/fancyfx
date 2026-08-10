@@ -29,10 +29,12 @@
 #'     rate, with AUC.}
 #'   \item{[plotThreshold()]}{Where to cut: sensitivity, specificity and TSS
 #'     across every threshold.}
+#'   \item{[plotCalibration()]}{Whether the predicted probabilities are honest
+#'     -- a separate question from discrimination, which AUC cannot answer.}
 #'   \item{[plotImportance()]}{Which predictors the model is leaning on, by
 #'     permutation.}
-#'   \item{[threshold_metrics()], [permutation_importance()]}{The tidy numbers
-#'     behind those.}
+#'   \item{[threshold_metrics()], [calibration_estimates()],
+#'     [permutation_importance()]}{The tidy numbers behind those.}
 #' }
 #'
 #' Every one of these requires evaluation data explicitly. Scoring a model on

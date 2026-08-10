@@ -93,7 +93,9 @@ species distribution models: prevalence, kappa and the true skill statistic
 \code{\link[=plotROC]{plotROC()}}, \code{\link[=plotThreshold]{plotThreshold()}}, \code{\link[=plotImportance]{plotImportance()}}.
 
 Other evaluation plots:
+\code{\link[=calibration_estimates]{calibration_estimates()}},
 \code{\link[=permutation_importance]{permutation_importance()}},
+\code{\link[=plotCalibration]{plotCalibration()}},
 \code{\link[=plotImportance]{plotImportance()}},
 \code{\link[=plotROC]{plotROC()}},
 \code{\link[=plotThreshold]{plotThreshold()}}

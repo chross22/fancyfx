@@ -25,11 +25,24 @@ library(fancyfx)
 An effect plot says what a model claims. This vignette is about the other
 question: whether to believe it.
 
-Everything here is aimed at **presence/absence models** — the species
-distribution case, where the response is whether something was there. AUC and
-TSS are defined for a binary outcome and nothing else, so applied to a Gaussian
-model of biomass they would return a number with no meaning. `fancyfx` refuses
-that rather than computing it.
+Most of what follows is aimed at **presence/absence models** — the species
+distribution case, where the response is whether something was there. AUC, TSS
+and calibration are defined for a binary outcome and nothing else, so applied to
+a Gaussian model of biomass they would return a number with no meaning.
+`fancyfx` refuses that rather than computing it. Permutation importance is the
+exception: it works for any model.
+
+There are three distinct questions here, and it is worth keeping them apart:
+
+| Question | Function |
+|---|---|
+| Does it rank presences above absences? | `plotROC()` |
+| Where should the cutoff go? | `plotThreshold()` |
+| Are the probabilities honest? | `plotCalibration()` |
+| Which predictors is it using? | `plotImportance()` |
+
+The first three are not interchangeable. A model can rank perfectly and still
+report probabilities that are wildly wrong.
 
 ## A worked example
 
@@ -115,6 +128,77 @@ that judgement can be made rather than assumed.
 ```{r threshold-tss}
 # TSS alone, without the curves it is built from
 plotThreshold(sdm, test, metrics = "tss", mark.best = TRUE)
+```
+
+## Calibration: are the probabilities honest?
+
+Discrimination and calibration are different properties, and a model can be
+good at one and bad at the other.
+
+AUC only cares whether presences are ranked above absences. That makes it blind
+to any monotone rescaling of the predictions: a model can post an excellent AUC
+while every probability it reports is far too extreme. If those probabilities
+are only ever compared with each other, that may not matter. If they feed a
+decision, an area of suitable habitat, or an expected count, it matters a great
+deal.
+
+```{r calibration, fig.height = 5}
+plotCalibration(sdm, test)
+```
+
+A well calibrated model sits on the diagonal: when it says 0.7, the outcome
+happens about 70% of the time. The reported **slope** makes that concrete — 1
+is perfect, and below 1 means the predictions are too extreme.
+
+To see what a failure looks like, here is the same model with its coefficients
+inflated. The ranking is untouched, so its AUC is *identical*:
+
+```{r calibration-bad, fig.height = 5}
+overconfident <- sdm
+overconfident$coefficients <- overconfident$coefficients * 2.5
+
+c(original = attr(threshold_metrics(sdm, test), "auc"),
+  overconfident = attr(threshold_metrics(overconfident, test), "auc"))
+
+plotCalibration(overconfident, test, title = "Same AUC, useless probabilities")
+```
+
+The curve is flatter than the diagonal and the rug has piled up against 0 and
+1. AUC saw none of this.
+
+### Reading the plot honestly
+
+Two features of the plot exist to stop it being over-read:
+
+* **The rug.** Calibration is usually worst at the extremes, and the extremes
+  usually hold the fewest predictions — so the most eye-catching departures
+  from the diagonal are often the least trustworthy points. The rug shows where
+  the predictions actually are.
+* **The interval on each bin**, which is a Wilson score interval rather than a
+  normal approximation. With few observations in a bin, or an observed
+  frequency near 0 or 1 — both routine here — the normal approximation puts the
+  bounds outside `[0, 1]`, and a plot should not claim something impossible.
+
+Binning is a genuine trade-off, exposed as `binning`. Quantile bins (the
+default) hold equal numbers of observations, so every point is equally
+reliable, at the cost of varying bin widths. Equal-width bins are easier to
+read but leave the extremes nearly empty — precisely where the interesting
+behaviour is.
+
+```{r calibration-binning, fig.height = 5}
+plotCalibration(sdm, test, binning = "width", bins = 8)
+```
+
+The numbers are available on their own, including the Brier score — the mean
+squared error of the probabilities, covering calibration and discrimination in
+one figure:
+
+```{r calibration-numbers}
+cal <- calibration_estimates(sdm, test)
+
+attr(cal, "calibration")
+attr(cal, "brier")
+head(cal, 3)
 ```
 
 ## Cross-validation, and why it is weaker

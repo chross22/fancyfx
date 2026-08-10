@@ -86,6 +86,72 @@ threshold_metrics <- function(model, newdata, folds = NULL, ...) {
   }
   newdata <- as.data.frame(newdata)
   # gamm4 and gamm hand back a wrapper that formula() and predict() both refuse.
+  pairs <- evaluation_pairs(model, newdata, folds, ...)
+  observed <- pairs$observed
+  predicted <- pairs$predicted
+  folds <- pairs$folds
+  complete <- pairs$complete
+  in.sample <- pairs$in.sample
+
+  if (is.null(folds)) {
+    out <- sweep_thresholds(observed, predicted)
+    auc.value <- auc(observed, predicted)
+  } else {
+    note_cv_folds()
+
+    folds <- folds[complete]
+    parts <- split(seq_along(observed), folds)
+    usable <- vapply(parts, function(i) length(unique(observed[i])) == 2,
+                     logical(1))
+    if (!any(usable)) {
+      stop("No fold contains both outcome classes, so no fold can be scored.",
+           call. = FALSE)
+    }
+    if (!all(usable)) {
+      warning("Dropping fold(s) with only one outcome class: ",
+              paste(names(parts)[!usable], collapse = ", "), call. = FALSE)
+      parts <- parts[usable]
+    }
+    out <- do.call(rbind, lapply(names(parts), function(f) {
+      i <- parts[[f]]
+      cbind(sweep_thresholds(observed[i], predicted[i]),
+            .fold = factor(f, levels = names(parts)))
+    }))
+    # Per fold, so the spread is visible rather than averaged into one number.
+    auc.value <- vapply(parts, function(i) auc(observed[i], predicted[i]),
+                        numeric(1))
+  }
+
+  rownames(out) <- NULL
+  attr(out, "auc") <- auc.value
+  attr(out, "prevalence") <- mean(observed)
+  attr(out, "n") <- length(observed)
+  attr(out, "in.sample") <- in.sample
+  out
+}
+
+#' Line up observed outcomes against predicted probabilities
+#'
+#' The shared prologue for every evaluation function: unwrap the model, pull the
+#' response out of `newdata`, predict, drop incomplete rows, and say something
+#' if the data turns out to be what the model was fitted on. Extracted so the
+#' rules about evaluation data are enforced in one place and cannot drift
+#' between functions.
+#'
+#' @param model A fitted model.
+#' @param newdata Data to evaluate on.
+#' @param folds Optional fold identifiers, one per row of `newdata`.
+#' @param require.both.classes Whether to refuse data containing only one
+#'   outcome class.
+#' @param ... Passed to [stats::predict()].
+#' @return A list with `observed`, `predicted`, `folds`, `complete` and
+#'   `in.sample`.
+#' @keywords internal
+evaluation_pairs <- function(model, newdata, folds = NULL,
+                             require.both.classes = TRUE, ...) {
+  # Unwrapped here rather than in each caller: gamm4 and gamm hand back a
+  # wrapper that formula() and predict() both refuse, and every evaluation
+  # function reaches this point.
   model <- unwrap_gam(model)
 
   # Checked against newdata before anything is dropped for missingness. After
@@ -119,56 +185,32 @@ threshold_metrics <- function(model, newdata, folds = NULL, ...) {
     stop("No rows of newdata have both a response and a prediction.",
          call. = FALSE)
   }
-  if (length(unique(observed)) < 2) {
+  if (require.both.classes && length(unique(observed)) < 2) {
     stop("newdata contains only one outcome class, so sensitivity and ",
          "specificity are not both defined. Evaluation needs both presences ",
          "and absences.", call. = FALSE)
   }
 
-  if (is.null(folds)) {
-    out <- sweep_thresholds(observed, predicted)
-    auc.value <- auc(observed, predicted)
-  } else {
-    note_once(
-      "cv.folds",
-      "Scoring within cross-validation folds. Cross-validated metrics are ",
-      "weaker evidence than a genuinely independent hold-out: the folds come ",
-      "from the same sample, and the model saw the rest of it. For spatial ",
-      "data the gap is wider still, because a held-out point usually has a ",
-      "near neighbour in the training folds -- use spatially blocked folds ",
-      "rather than random ones, and read the spread across folds as the ",
-      "honest part of the picture."
-    )
+  list(observed = observed, predicted = predicted,
+       folds = if (is.null(folds)) NULL else folds,
+       complete = complete, in.sample = in.sample)
+}
 
-    folds <- folds[complete]
-    parts <- split(seq_along(observed), folds)
-    usable <- vapply(parts, function(i) length(unique(observed[i])) == 2,
-                     logical(1))
-    if (!any(usable)) {
-      stop("No fold contains both outcome classes, so no fold can be scored.",
-           call. = FALSE)
-    }
-    if (!all(usable)) {
-      warning("Dropping fold(s) with only one outcome class: ",
-              paste(names(parts)[!usable], collapse = ", "), call. = FALSE)
-      parts <- parts[usable]
-    }
-    out <- do.call(rbind, lapply(names(parts), function(f) {
-      i <- parts[[f]]
-      cbind(sweep_thresholds(observed[i], predicted[i]),
-            .fold = factor(f, levels = names(parts)))
-    }))
-    # Per fold, so the spread is visible rather than averaged into one number.
-    auc.value <- vapply(parts, function(i) auc(observed[i], predicted[i]),
-                        numeric(1))
-  }
-
-  rownames(out) <- NULL
-  attr(out, "auc") <- auc.value
-  attr(out, "prevalence") <- mean(observed)
-  attr(out, "n") <- length(observed)
-  attr(out, "in.sample") <- in.sample
-  out
+#' Note that cross-validated scores are weaker evidence than a hold-out
+#'
+#' @return Invisibly `NULL`.
+#' @keywords internal
+note_cv_folds <- function() {
+  note_once(
+    "cv.folds",
+    "Scoring within cross-validation folds. Cross-validated metrics are ",
+    "weaker evidence than a genuinely independent hold-out: the folds come ",
+    "from the same sample, and the model saw the rest of it. For spatial ",
+    "data the gap is wider still, because a held-out point usually has a ",
+    "near neighbour in the training folds -- use spatially blocked folds ",
+    "rather than random ones, and read the spread across folds as the ",
+    "honest part of the picture."
+  )
 }
 
 #' Sweep every threshold the predictions admit

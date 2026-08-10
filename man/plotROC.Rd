@@ -80,7 +80,9 @@ species distribution models: prevalence, kappa and the true skill statistic
 the numbers underneath.
 
 Other evaluation plots:
+\code{\link[=calibration_estimates]{calibration_estimates()}},
 \code{\link[=permutation_importance]{permutation_importance()}},
+\code{\link[=plotCalibration]{plotCalibration()}},
 \code{\link[=plotImportance]{plotImportance()}},
 \code{\link[=plotThreshold]{plotThreshold()}},
 \code{\link[=threshold_metrics]{threshold_metrics()}}
