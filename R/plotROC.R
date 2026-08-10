@@ -52,7 +52,7 @@
 #' plotROC(fit, test)
 #'
 #' @export
-plotROC <- function(model, newdata, folds = NULL, title = "",
+plotROC <- function(model, newdata = NULL, folds = NULL, title = "",
                     show.auc = TRUE,
                     theme = theme_fancyfx(),
                     palette = fancyfx_palette(),
@@ -167,7 +167,7 @@ auc_label <- function(auc.value) {
 #' plotThreshold(fit, dat[201:400, ], metrics = "tss")
 #'
 #' @export
-plotThreshold <- function(model, newdata, folds = NULL,
+plotThreshold <- function(model, newdata = NULL, folds = NULL,
                           metrics = c("tss", "sensitivity", "specificity"),
                           title = "",
                           mark.best = TRUE,

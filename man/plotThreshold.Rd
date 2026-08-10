@@ -6,7 +6,7 @@
 \usage{
 plotThreshold(
   model,
-  newdata,
+  newdata = NULL,
   folds = NULL,
   metrics = c("tss", "sensitivity", "specificity"),
   title = "",
@@ -80,6 +80,7 @@ plotThreshold(fit, dat[201:400, ], metrics = "tss")
 Other evaluation plots:
 \code{\link[=calc_deviance]{calc_deviance()}},
 \code{\link[=calibration_estimates]{calibration_estimates()}},
+\code{\link[=held_out]{held_out()}},
 \code{\link[=permutation_importance]{permutation_importance()}},
 \code{\link[=plotCalibration]{plotCalibration()}},
 \code{\link[=plotImportance]{plotImportance()}},

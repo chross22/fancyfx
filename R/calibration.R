@@ -68,16 +68,19 @@
 #' attr(cal, "brier")
 #'
 #' @export
-calibration_estimates <- function(model, newdata, bins = 10,
+calibration_estimates <- function(model, newdata = NULL, bins = 10,
                                   binning = c("quantile", "width"),
                                   folds = NULL, level = 0.95, ...) {
-  if (missing(newdata) || is.null(newdata)) {
+  supplied <- inherits(model, "fancyfx_held_out")
+  if (!supplied && (missing(newdata) || is.null(newdata))) {
     stop("newdata is required: a model scored against the data it was fitted ",
          "to flatters itself. Supply held-out data, or the training data ",
-         "explicitly if that is genuinely what you want.", call. = FALSE)
+         "explicitly if that is genuinely what you want.\nTo score ",
+         "predictions you already have, wrap them with held_out().",
+         call. = FALSE)
   }
-  newdata <- as.data.frame(newdata)
-  model <- unwrap_gam(model)
+  if (supplied) newdata <- NULL else newdata <- as.data.frame(newdata)
+  if (!supplied) model <- unwrap_gam(model)
 
   binning <- check_choice(binning, c("quantile", "width"), "binning")
   check_level(level)
@@ -254,7 +257,7 @@ calibration_fit <- function(observed, predicted) {
 #' plotCalibration(fit, dat[301:600, ])
 #'
 #' @export
-plotCalibration <- function(model, newdata, bins = 10,
+plotCalibration <- function(model, newdata = NULL, bins = 10,
                             binning = c("quantile", "width"),
                             folds = NULL, level = 0.95,
                             title = "", show.stats = TRUE,
@@ -329,8 +332,13 @@ plotCalibration <- function(model, newdata, bins = 10,
 #' @return A numeric vector of predicted probabilities.
 #' @keywords internal
 predicted_for_rug <- function(model, newdata, ...) {
-  predicted <- predict_probability(unwrap_gam(model), as.data.frame(newdata),
-                                   ...)
+  # Predictions supplied directly are the rug: re-predicting would need a model
+  # that, by the time this path is used, the caller does not have.
+  predicted <- if (inherits(model, "fancyfx_held_out")) {
+    model$predicted
+  } else {
+    predict_probability(unwrap_gam(model), as.data.frame(newdata), ...)
+  }
   predicted[!is.na(predicted)]
 }
 

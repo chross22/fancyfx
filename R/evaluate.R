@@ -79,12 +79,15 @@
 #'
 #' @export
 threshold_metrics <- function(model, newdata, folds = NULL, ...) {
-  if (missing(newdata) || is.null(newdata)) {
+  supplied <- inherits(model, "fancyfx_held_out")
+  if (!supplied && (missing(newdata) || is.null(newdata))) {
     stop("newdata is required: a model scored against the data it was fitted ",
          "to flatters itself. Supply held-out data, or the training data ",
-         "explicitly if that is genuinely what you want.", call. = FALSE)
+         "explicitly if that is genuinely what you want.\nTo score ",
+         "predictions you already have, wrap them with held_out().",
+         call. = FALSE)
   }
-  newdata <- as.data.frame(newdata)
+  if (supplied) newdata <- NULL else newdata <- as.data.frame(newdata)
   # gamm4 and gamm hand back a wrapper that formula() and predict() both refuse.
   pairs <- evaluation_pairs(model, newdata, folds, ...)
   observed <- pairs$observed
@@ -149,6 +152,12 @@ threshold_metrics <- function(model, newdata, folds = NULL, ...) {
 #' @keywords internal
 evaluation_pairs <- function(model, newdata, folds = NULL,
                              require.both.classes = TRUE, ...) {
+  # Predictions supplied directly carry everything this function exists to
+  # produce, so there is nothing to predict and nothing to unwrap.
+  if (inherits(model, "fancyfx_held_out")) {
+    return(held_out_pairs(model, folds, require.both.classes))
+  }
+
   # Unwrapped here rather than in each caller: gamm4 and gamm hand back a
   # wrapper that formula() and predict() both refuse, and every evaluation
   # function reaches this point.

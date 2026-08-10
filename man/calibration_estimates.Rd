@@ -6,7 +6,7 @@
 \usage{
 calibration_estimates(
   model,
-  newdata,
+  newdata = NULL,
   bins = 10,
   binning = c("quantile", "width"),
   folds = NULL,
@@ -93,6 +93,7 @@ discrimination.
 
 Other evaluation plots:
 \code{\link[=calc_deviance]{calc_deviance()}},
+\code{\link[=held_out]{held_out()}},
 \code{\link[=permutation_importance]{permutation_importance()}},
 \code{\link[=plotCalibration]{plotCalibration()}},
 \code{\link[=plotImportance]{plotImportance()}},

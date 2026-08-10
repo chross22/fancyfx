@@ -95,6 +95,7 @@ species distribution models: prevalence, kappa and the true skill statistic
 Other evaluation plots:
 \code{\link[=calc_deviance]{calc_deviance()}},
 \code{\link[=calibration_estimates]{calibration_estimates()}},
+\code{\link[=held_out]{held_out()}},
 \code{\link[=permutation_importance]{permutation_importance()}},
 \code{\link[=plotCalibration]{plotCalibration()}},
 \code{\link[=plotImportance]{plotImportance()}},
