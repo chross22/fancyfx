@@ -2,7 +2,7 @@
 % Please edit documentation in R/combinePlots.R
 \name{combinePlots}
 \alias{combinePlots}
-\title{Combine multiple smooth plots for simultaneous display}
+\title{Combine multiple effect plots for simultaneous display}
 \usage{
 combinePlots(
   model,
@@ -10,29 +10,68 @@ combinePlots(
   vars,
   title = "",
   var.transform = c("none", "log", "log10", "sqrt"),
+  scale = c("auto", "link", "response"),
+  interval = c("se", "ci"),
+  level = 0.95,
+  n = 100,
   rug.type = c("histogram", "density"),
-  bins = 30
+  bins = 30,
+  ...
 )
 }
 \arguments{
-\item{model}{GAM produced using mgcv}
+\item{model}{A fitted model. GAMs from \pkg{mgcv} are shown as partial
+effects; other model classes are shown as predictions. See \code{\link[=plotEffects]{plotEffects()}}.}
 
-\item{dat}{Raw data the model was fitted on}
+\item{dat}{Raw data the model was fitted on.}
 
-\item{vars}{Variables of interest}
+\item{vars}{Variables of interest, as a character vector.}
 
-\item{title}{Plot title, optional}
+\item{title}{Plot title, optional.}
 
 \item{var.transform}{How to transform the variables before plotting. One
 value used for every variable, or one per entry in \code{vars}.}
 
-\item{rug.type}{Type of rug plot to draw beneath each smooth}
+\item{scale}{\code{"auto"}, \code{"link"}, or \code{"response"}, passed to \code{\link[=plotEffects]{plotEffects()}}.}
 
-\item{bins}{Number of bins for a histogram rug}
+\item{interval}{\code{"se"} or \code{"ci"}, passed to \code{\link[=plotEffects]{plotEffects()}}.}
+
+\item{level}{Confidence level used when \code{interval = "ci"}.}
+
+\item{n}{Number of points at which to evaluate each effect.}
+
+\item{rug.type}{Type of rug plot to draw above each effect.}
+
+\item{bins}{Number of bins for a histogram rug.}
+
+\item{...}{Passed through to \code{\link[=plotEffects]{plotEffects()}} and on to the backend.}
 }
 \value{
-The arranged smooth plots
+The arranged effect plots.
 }
 \description{
-Combine multiple smooth plots for simultaneous display
+Runs \code{\link[=plotEffects]{plotEffects()}} over several predictors and arranges the results as a
+labelled panel grid. Each panel keeps its own rug, so the panels stay
+individually readable rather than becoming a wall of curves.
 }
+\examples{
+gam.fit <- mgcv::gam(Petal.Length ~ s(Sepal.Length) + s(Petal.Width),
+                     data = iris)
+combinePlots(gam.fit, iris, vars = c("Sepal.Length", "Petal.Width"),
+             title = "Partial effects on petal length")
+
+# Non-GAM models work the same way
+lm.fit <- lm(mpg ~ wt + hp, data = mtcars)
+combinePlots(lm.fit, mtcars, vars = c("wt", "hp"), rug.type = "density")
+
+}
+\seealso{
+\code{\link[=plotEffects]{plotEffects()}} for a single predictor and for what the y axis
+means under each model type.
+
+Other effect plots:
+\code{\link[=plotEffects]{plotEffects()}},
+\code{\link[=plotRugs]{plotRugs()}},
+\code{\link[=plotSmooths]{plotSmooths()}}
+}
+\concept{effect plots}

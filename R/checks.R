@@ -29,3 +29,38 @@ check_transform <- function(transform) {
   }
   transform
 }
+
+#' Check a scale name
+#'
+#' `"auto"` is resolved by each `effect_estimates()` method, not here: the
+#' natural scale differs by backend, and only the method knows which it is.
+#'
+#' @param scale the scale given
+#' @return `scale`, unchanged
+#' @keywords internal
+check_scale <- function(scale) {
+  check_choice(scale, c("auto", "link", "response"), "scale")
+}
+
+#' Check an interval name
+#'
+#' @param interval the interval given
+#' @return `interval`, unchanged
+#' @keywords internal
+check_interval <- function(interval) {
+  check_choice(interval, c("se", "ci"), "interval")
+}
+
+#' Check a confidence level
+#'
+#' @param level the level given
+#' @return `level`, unchanged
+#' @keywords internal
+check_level <- function(level) {
+  if (!is.numeric(level) || length(level) != 1 || is.na(level) ||
+      level <= 0 || level >= 1) {
+    stop("level must be a single number strictly between 0 and 1, not: ",
+         paste(format(level), collapse = ", "), call. = FALSE)
+  }
+  level
+}

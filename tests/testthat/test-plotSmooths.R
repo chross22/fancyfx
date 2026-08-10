@@ -1,92 +1,52 @@
-# Small GAM fixture reused across tests. Keeping this cheap and deterministic
-# (fixed seed, small n) so tests run fast and consistently.
-make_test_gam <- function() {
-  set.seed(1)
-  dat <- data.frame(x1 = runif(100, 1, 10))
-  dat$y <- sin(dat$x1) + rnorm(100, sd = 0.1)
-  mgcv::gam(y ~ s(x1), data = dat)
-}
+# plotSmooths() is the deprecated ancestor of plotEffects(). What matters now
+# is that it still works and that it says it is going away -- the substantive
+# plotting behaviour is covered in test-plotEffects.R.
 
-# The data the fixture was fitted on, for the rug beneath each smooth.
-test_gam_data <- function() {
-  set.seed(1)
-  data.frame(x1 = runif(100, 1, 10))
-}
+test_that("plotSmooths warns that it is deprecated and points at the replacement", {
+  # The guard fires once per session, so clear it or an earlier test may have
+  # already used up the one warning.
+  reset_deprecation_warnings()
 
-# plotSmooths() returns a rug stacked above a smooth. The smooth is the one
-# carrying the labels and the mapping.
-smooth_panel <- function(p) p[[2]]
+  expect_warning(plotSmooths(make_test_gam(), test_data(), "x1"),
+                 "plotSmooths\\(\\) is deprecated")
 
-test_that("plotSmooths returns a ggplot object", {
-  model <- make_test_gam()
-  p <- plotSmooths(model, test_gam_data(), "x1", xlab = "X1")
-  expect_s3_class(p, "ggplot")
+  reset_deprecation_warnings()
+  expect_warning(plotSmooths(make_test_gam(), test_data(), "x1"),
+                 "Use plotEffects\\(\\)")
 })
 
-test_that("plotSmooths errors on an unknown transform", {
-  # Same lazy-aes() reasoning as plotRugs -- force a build to trigger stop().
+test_that("plotSmooths warns only once per session", {
+  # Warning on every call would make a loop over variables unreadable.
+  reset_deprecation_warnings()
+  suppress_deprecation(plotSmooths(make_test_gam(), test_data(), "x1"))
+
+  expect_no_warning(plotSmooths(make_test_gam(), test_data(), "x1"))
+})
+
+test_that("plotSmooths still returns the plot it always did", {
+  dat <- test_data()
   model <- make_test_gam()
-  expect_error(
-    ggplot2::ggplot_build(plotSmooths(model, test_gam_data(), "x1", xlab = "X1", transform = "invalid")),
-    "Unknown transformation requested"
+
+  old <- suppress_deprecation(plotSmooths(model, dat, "x1", xlab = "X1"))
+  new <- plotEffects(model, dat, "x1", xlab = "X1")
+
+  expect_s3_class(old, "patchwork")
+  # Same defaults, same quantity, same data underneath.
+  expect_equal(effect_panel(old)$labels, effect_panel(new)$labels)
+  expect_equal(effect_panel(old)$data, effect_panel(new)$data)
+})
+
+test_that("plotSmooths still forwards its arguments", {
+  dat <- test_data()
+  model <- make_test_gam()
+
+  p <- suppress_deprecation(
+    plotSmooths(model, dat, "x1", xlab = "My X", ylab = "My Y")
   )
-})
+  expect_equal(effect_panel(p)$labels$x, "My X")
+  expect_equal(effect_panel(p)$labels$y, "My Y")
 
-test_that("plotSmooths applies xlab/ylab labels correctly", {
-  model <- make_test_gam()
-  p <- plotSmooths(model, test_gam_data(), "x1", xlab = "My X", ylab = "My Y")
-
-  expect_equal(smooth_panel(p)$labels$x, "My X")
-  expect_equal(smooth_panel(p)$labels$y, "My Y")
-})
-
-test_that("plotSmooths uses the default ylab when not supplied", {
-  model <- make_test_gam()
-  p <- plotSmooths(model, test_gam_data(), "x1", xlab = "X1")
-
-  expect_equal(smooth_panel(p)$labels$y, "Partial Effect")
-})
-
-test_that("plotSmooths applies the requested transform to the smooth term", {
-  model <- make_test_gam()
-  smooth_est <- gratia::smooth_estimates(
-    model, select = "x1", dist = 0.1, partial_match = TRUE
-  )
-
-  p_none <- plotSmooths(model, test_gam_data(), "x1", xlab = "X1", transform = "none")
-  p_log  <- plotSmooths(model, test_gam_data(), "x1", xlab = "X1", transform = "log")
-
-  mapped_none <- rlang::eval_tidy(smooth_panel(p_none)$mapping$x, smooth_est)
-  mapped_log  <- rlang::eval_tidy(smooth_panel(p_log)$mapping$x, smooth_est)
-
-  expect_equal(mapped_none, smooth_est$x1)
-  expect_equal(mapped_log, log(smooth_est$x1))
-})
-
-test_that("plotSmooths does not clip the y-axis to a fixed range", {
-  # Regression test: an earlier version hardcoded
-  # coord_cartesian(ylim = c(-10, 5)), which would silently clip any
-  # estimate +/- se falling outside that window. That's been removed;
-  # this confirms the plot's panel range now reflects the actual data
-  # rather than a fixed, model-specific window.
-  model <- make_test_gam()
-  built <- ggplot2::ggplot_build(
-    smooth_panel(plotSmooths(model, test_gam_data(), "x1", xlab = "X1"))
-  )
-  panel_range <- built$layout$panel_params[[1]]$y.range
-
-  expect_false(isTRUE(all.equal(panel_range, c(-10, 5))))
-})
-
-test_that("xlab defaults to the variable's own name", {
-  model <- make_test_gam()
-  p <- plotSmooths(model, test_gam_data(), "x1")
-
-  expect_equal(smooth_panel(p)$labels$x, "x1")
-})
-
-test_that("an unknown rug type is refused before anything is drawn", {
-  model <- make_test_gam()
-  expect_error(plotSmooths(model, test_gam_data(), "x1", rug.type = "violin"),
-               "Unknown type requested")
+  expect_error(suppress_deprecation(
+    plotSmooths(model, dat, "x1", rug.type = "violin")
+  ), "Unknown type requested")
 })

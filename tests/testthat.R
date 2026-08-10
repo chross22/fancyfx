@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(fancygam)
+library(fancyfx)
 
-test_check("fancygam")
+test_check("fancyfx")

@@ -11,6 +11,15 @@
 #'   `geom_histogram()`'s default, which is the same 30 but emits a message
 #'   about it on every plot. Ignored when `type` is `"density"`.
 #' @return The rug plot from dat for var
+#'
+#' @family effect plots
+#' @seealso [plotEffects()], which stacks this above an effect curve for you.
+#'
+#' @examples
+#' plotRugs(iris, "Sepal.Length")
+#' plotRugs(iris, "Sepal.Length", type = "density")
+#' plotRugs(mtcars, "disp", transform = "log10", bins = 15)
+#'
 #' @export
 plotRugs <- function(dat, var, type = c("histogram", "density"),
                      transform = c("none", "log", "log10", "sqrt"),

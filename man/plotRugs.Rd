@@ -32,3 +32,18 @@ The rug plot from dat for var
 The companion to a smooth plot: it shows where the data actually is, so a
 bend in a smooth can be read against how much evidence sits under it.
 }
+\examples{
+plotRugs(iris, "Sepal.Length")
+plotRugs(iris, "Sepal.Length", type = "density")
+plotRugs(mtcars, "disp", transform = "log10", bins = 15)
+
+}
+\seealso{
+\code{\link[=plotEffects]{plotEffects()}}, which stacks this above an effect curve for you.
+
+Other effect plots:
+\code{\link[=combinePlots]{combinePlots()}},
+\code{\link[=plotEffects]{plotEffects()}},
+\code{\link[=plotSmooths]{plotSmooths()}}
+}
+\concept{effect plots}

@@ -1,0 +1,203 @@
+---
+title: "Getting started with fancyfx"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Getting started with fancyfx}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  out.width = "100%"
+)
+```
+
+```{r setup}
+library(fancyfx)
+```
+
+## The idea
+
+An effect curve on its own is easy to over-read. A model will happily draw a
+confident-looking bend at the far right of the x axis, and nothing in the plot
+tells you that only three observations sit under it.
+
+`fancyfx` pairs every effect curve with a rug of the raw data, drawn directly
+above it on a shared x axis. The shape of the effect and the weight of evidence
+behind it end up in the same figure, so they get read together.
+
+```{r idea}
+gam.fit <- mgcv::gam(Petal.Length ~ s(Sepal.Length), data = iris)
+
+plotEffects(gam.fit, iris, "Sepal.Length",
+            xlab = "Sepal length (cm)")
+```
+
+The histogram along the top is the whole point. Where it is thin, be careful.
+
+## GAMs
+
+Generalized additive models fitted with **mgcv** [@wood2017] are the package's
+original use case, and remain the default path. Effects are extracted with
+`gratia::smooth_estimates()` [@gratia], which reports the *partial effect* of a
+smooth: the term's own contribution to the linear predictor, centered so it
+averages to zero.
+
+`combinePlots()` runs the same thing across several terms and arranges them as
+labelled panels. Each panel keeps its own rug, since the predictors do not
+generally share a distribution.
+
+```{r gam-multi}
+gam.fit2 <- mgcv::gam(Petal.Length ~ s(Sepal.Length) + s(Petal.Width),
+                      data = iris)
+
+combinePlots(gam.fit2, iris,
+             vars = c("Sepal.Length", "Petal.Width"),
+             title = "Partial effects on petal length")
+```
+
+## Other models
+
+Anything that is not an mgcv GAM is routed through
+`marginaleffects::predictions()` [@marginaleffects], which supports a wide range
+of model classes. Nothing about the call changes:
+
+```{r lm}
+lm.fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+combinePlots(lm.fit, mtcars, vars = c("wt", "hp"),
+             rug.type = "density")
+```
+
+For a GLM, `scale = "response"` puts the curve back on the scale of the outcome
+— probabilities, for a logistic regression — rather than log-odds:
+
+```{r glm}
+glm.fit <- glm(am ~ wt + hp, data = mtcars, family = binomial)
+
+plotEffects(glm.fit, mtcars, "wt",
+            scale = "response", interval = "ci",
+            xlab = "Weight (1000 lbs)",
+            ylab = "P(manual transmission)")
+```
+
+## What the y axis means
+
+This is the section worth reading before you put a `fancyfx` figure in a paper.
+
+The two backends compute **different quantities**, and the package does not
+paper over the difference:
+
+| Model | `scale = "auto"` gives you | Centered on zero? | Other predictors |
+|---|---|---|---|
+| mgcv GAM | Partial effect, link scale | Yes | Excluded |
+| Everything else | Predicted value, response scale | No | Held at representative values |
+
+A **partial effect** is one term's contribution in isolation. It is centered by
+construction, so its zero line is an arbitrary reference point, not a
+meaningful value of the outcome. A **predicted value** is the model's actual
+fitted output as one predictor varies while the others sit at their means (for
+numeric predictors) or modes (for factors).
+
+Because they are different quantities, `fancyfx` labels the y axis with whichever
+one it computed, and you should not compare them side by side as though they
+were on the same footing.
+
+A GAM asked for `scale = "response"` gets *predictions*, not a back-transformed
+partial effect. That is deliberate: a centered partial effect has no coherent
+back-transformation on its own, and exponentiating one would produce a curve
+that looks meaningful and is not.
+
+```{r quantities}
+partial <- effect_estimates(gam.fit, "Sepal.Length")
+predicted <- effect_estimates(gam.fit, "Sepal.Length", scale = "response")
+
+c(partial = attr(partial, "quantity"),
+  predicted = attr(predicted, "quantity"))
+
+# The partial effect averages to zero; the prediction does not.
+round(c(partial = mean(partial$.estimate),
+        predicted = mean(predicted$.estimate)), 3)
+```
+
+### The ribbon
+
+The default `interval = "se"` draws a `± 1` standard error band, which spans
+roughly 68%. This is the historical default of this package, kept so existing
+figures do not silently change. For a conventional 95% interval, ask for one:
+
+```{r intervals}
+plotEffects(lm.fit, mtcars, "wt", interval = "ci", level = 0.95)
+```
+
+On the response scale, `interval = "ci"` builds the interval on the link scale
+and back-transforms it, so it stays inside the range the response actually
+admits — a probability band will not run past 0 or 1. That construction is
+asymmetric about the estimate and so has no single standard error behind it,
+which is why `interval = "se"` cannot use it and may produce a band that does
+escape those bounds. If you are plotting probabilities, prefer `"ci"`.
+
+Under a Bayesian fit, `marginaleffects` returns a credible interval, and
+`interval = "ci"` will give you that rather than a confidence interval — the
+argument names the ribbon, not the inferential philosophy.
+
+## Transforms and rugs
+
+`transform` is applied to both the curve and the rug, so the two stay on the
+same x axis. Applying it to only one of them would defeat the entire purpose of
+stacking them.
+
+```{r transform}
+plotEffects(lm.fit, mtcars, "hp",
+            transform = "log10",
+            xlab = "Horsepower (log10)")
+```
+
+Rugs come in two styles. `"histogram"` (the default) shows counts and reads well
+for moderate sample sizes; `"density"` is smoother and works better when the
+data are dense enough that a histogram becomes noisy.
+
+```{r rug-types}
+plotRugs(mtcars, "wt", type = "density")
+```
+
+`combinePlots()` accepts one transform for all variables or one per variable:
+
+```{r per-var-transform}
+combinePlots(lm.fit, mtcars, vars = c("wt", "hp"),
+             var.transform = c("none", "log10"))
+```
+
+## Migrating from fancygam
+
+`fancyfx` was called `fancygam` when it only handled GAMs. `plotSmooths()` still
+works and produces an identical plot, but warns once per session:
+
+```r
+# Old:
+plotSmooths(gam.fit, iris, "Sepal.Length")
+
+# New — same arguments, same output:
+plotEffects(gam.fit, iris, "Sepal.Length")
+```
+
+The defaults (`scale = "auto"`, `interval = "se"`) reproduce exactly what
+`plotSmooths()` drew for a GAM, so migrating is a rename and nothing more.
+
+## How to cite
+
+```r
+citation("fancyfx")
+```
+
+`fancyfx` is a plotting layer over other people's estimation work. Please also
+cite whichever package actually computed your effects: **gratia** and **mgcv**
+for GAM partial effects, **marginaleffects** otherwise.
+
+## References

@@ -1,5 +1,7 @@
-^fancygam\.Rproj$
+^fancyfx\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^\.github$
 ^README\.Rmd$
+^\.DS_Store$
+^\.Rhistory$

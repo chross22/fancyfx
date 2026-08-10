@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotSmooths.R
 \name{plotSmooths}
 \alias{plotSmooths}
-\title{Extract and plot smooths from generalized additive model created using mgcv::gam()}
+\title{Extract and plot smooths from a GAM (deprecated)}
 \usage{
 plotSmooths(
   model,
@@ -16,29 +16,51 @@ plotSmooths(
 )
 }
 \arguments{
-\item{model}{GAM produced using mgcv}
+\item{model}{GAM produced using \pkg{mgcv}.}
 
-\item{dat}{Raw data used to fit the model, for the accompanying rug plot.
-It must be the data the model was \emph{fitted} on: \code{gratia} reports smooths in
-the model's own units, so a rug drawn from differently scaled data would sit
-on a different x axis than the smooth above it.}
+\item{dat}{Raw data used to fit the model, for the accompanying rug plot.}
 
-\item{var}{Variable smooths to extract}
+\item{var}{Variable smooths to extract.}
 
-\item{xlab}{Label for the x-axis, describing var with units where applicable.
-Defaults to the variable's own name.}
+\item{xlab}{Label for the x-axis. Defaults to the variable's own name.}
 
-\item{ylab}{Label for y-axis of smooth plot; default is "Partial Effect"}
+\item{ylab}{Label for y-axis of smooth plot; default is \code{"Partial Effect"}.}
 
-\item{transform}{Optional parameter indicating how to transform the variable, if applicable}
+\item{transform}{Optional parameter indicating how to transform the variable,
+if applicable.}
 
-\item{rug.type}{Type of rug plot to draw beneath the smooth}
+\item{rug.type}{Type of rug plot to draw beneath the smooth.}
 
-\item{bins}{Number of bins for a histogram rug}
+\item{bins}{Number of bins for a histogram rug.}
 }
 \value{
-A smooth plot for var with its rug plot beneath it
+A smooth plot for \code{var} with its rug plot above it.
 }
 \description{
-Extract and plot smooths from generalized additive model created using mgcv::gam()
+\strong{[Deprecated]}
+
+\code{plotSmooths()} was the GAM-only ancestor of \code{\link[=plotEffects]{plotEffects()}}. It still works
+and still returns the same plot, but it warns once per session and will be
+removed in a future release. Rename the call: every argument is unchanged,
+and the defaults (\code{scale = "link"}, \code{interval = "se"}) reproduce exactly what
+\code{plotSmooths()} drew.
 }
+\examples{
+gam.fit <- mgcv::gam(Petal.Length ~ s(Sepal.Length), data = iris)
+
+# Deprecated:
+# plotSmooths(gam.fit, iris, "Sepal.Length")
+
+# Use instead:
+plotEffects(gam.fit, iris, "Sepal.Length")
+
+}
+\seealso{
+\code{\link[=plotEffects]{plotEffects()}}, which replaces this function.
+
+Other effect plots:
+\code{\link[=combinePlots]{combinePlots()}},
+\code{\link[=plotEffects]{plotEffects()}},
+\code{\link[=plotRugs]{plotRugs()}}
+}
+\concept{effect plots}
