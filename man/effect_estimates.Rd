@@ -3,6 +3,9 @@
 \name{effect_estimates}
 \alias{effect_estimates}
 \alias{effect_estimates.gam}
+\alias{effect_estimates.scam}
+\alias{effect_estimates.gamm4}
+\alias{effect_estimates.gamm}
 \alias{effect_estimates.default}
 \title{Extract a variable's effect from a model as a tidy data frame}
 \usage{
@@ -25,6 +28,20 @@ effect_estimates(
   n = 100,
   ...
 )
+
+\method{effect_estimates}{scam}(
+  model,
+  var,
+  scale = c("auto", "link", "response"),
+  interval = c("auto", "se", "ci", "cri"),
+  level = 0.95,
+  n = 100,
+  ...
+)
+
+\method{effect_estimates}{gamm4}(model, var, ...)
+
+\method{effect_estimates}{gamm}(model, var, ...)
 
 \method{effect_estimates}{default}(
   model,

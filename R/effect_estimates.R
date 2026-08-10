@@ -105,6 +105,60 @@ effect_estimates.gam <- function(model, var,
     return(NextMethod())
   }
 
+  partial_effect(model, var, interval, level, ...)
+}
+
+#' @rdname effect_estimates
+#' @export
+effect_estimates.scam <- function(model, var,
+                                  scale = c("auto", "link", "response"),
+                                  interval = c("auto", "se", "ci", "cri"),
+                                  level = 0.95,
+                                  n = 100,
+                                  ...) {
+  # A shape-constrained GAM is a GAM, and gratia reports its smooths, but scam
+  # objects inherit from glm rather than gam -- so without this method they
+  # would fall through to the prediction backend and quietly report a different
+  # quantity than every other GAM in the package.
+  scale <- check_scale(scale)
+  interval <- check_interval(interval)
+  check_level(level)
+
+  if (scale == "auto") scale <- "link"
+  if (interval == "auto") interval <- "se"
+
+  if (scale == "response") {
+    return(NextMethod())
+  }
+
+  partial_effect(model, var, interval, level, ...)
+}
+
+#' @rdname effect_estimates
+#' @export
+effect_estimates.gamm4 <- function(model, var, ...) {
+  effect_estimates(unwrap_gam(model), var, ...)
+}
+
+#' @rdname effect_estimates
+#' @export
+effect_estimates.gamm <- function(model, var, ...) {
+  effect_estimates(unwrap_gam(model), var, ...)
+}
+
+#' The partial effect of a smooth, via gratia
+#'
+#' Shared by every model class \pkg{gratia} can report smooths for, so those
+#' classes cannot drift apart in what they compute or how they fail.
+#'
+#' @param model A fitted model gratia understands.
+#' @param var Name of the smoothed predictor.
+#' @param interval `"se"` or `"ci"` (already resolved).
+#' @param level Interval level.
+#' @param ... Passed to [gratia::smooth_estimates()].
+#' @return A standardized effect frame.
+#' @keywords internal
+partial_effect <- function(model, var, interval, level, ...) {
   # gratia raises its own error for a name it cannot match, and suggests
   # partial_match = TRUE -- advice that cannot help here, since we already pass
   # it. Say what is actually wrong and list what the model does offer.
@@ -137,6 +191,45 @@ effect_estimates.gam <- function(model, var,
     quantity = "Partial Effect",
     group = smooth_group(est)
   )
+}
+
+#' Unwrap a fitted object that carries its GAM in a list element
+#'
+#' `gamm4::gamm4()` and `mgcv::gamm()` return a list holding the GAM alongside
+#' the mixed-model fit it was estimated through, rather than a fitted model
+#' object. Nothing downstream can use the wrapper: `marginaleffects` refuses the
+#' class outright, and `formula()` and `predict()` both fail on it. The `$gam`
+#' element is an ordinary `gam`, so unwrapping makes every path work at once.
+#'
+#' The random effects are left behind with the wrapper. That is the right
+#' default and matches the rest of the package -- the smooth is reported at the
+#' population level -- but it does mean the ribbon covers uncertainty in the
+#' smooth alone.
+#'
+#' @param model A fitted model, wrapped or not.
+#' @return The `$gam` element when there is one, otherwise `model` unchanged.
+#' @keywords internal
+unwrap_gam <- function(model) {
+  if (!is.list(model) || is.null(model$gam) || !inherits(model$gam, "gam")) {
+    return(model)
+  }
+  inner <- model$gam
+
+  # The unwrapped fit carries class "gam" alone, where one from mgcv::gam()
+  # carries c("gam", "glm", "lm"). marginaleffects dispatches on the full
+  # inheritance and refuses the truncated form outright, so predictions would
+  # be unavailable for exactly these two wrappers and no other GAM.
+  #
+  # Restoring the classes is safe rather than a fudge: marginaleffects reaches
+  # mgcv's own predict() for a gam either way. Estimates come back identical to
+  # calling predict(se.fit = TRUE) directly, and standard errors agree to about
+  # 1e-7 relative -- marginaleffects differentiates numerically for the delta
+  # method, so the last digits differ. The tests assert this rather than taking
+  # it on trust.
+  if (identical(class(inner), "gam")) {
+    class(inner) <- c("gam", "glm", "lm")
+  }
+  inner
 }
 
 #' Identify the factor a set of smooths is split by

@@ -85,6 +85,8 @@ threshold_metrics <- function(model, newdata, folds = NULL, ...) {
          "explicitly if that is genuinely what you want.", call. = FALSE)
   }
   newdata <- as.data.frame(newdata)
+  # gamm4 and gamm hand back a wrapper that formula() and predict() both refuse.
+  model <- unwrap_gam(model)
 
   # Checked against newdata before anything is dropped for missingness. After
   # subsetting, a short folds vector has already been padded with NA to the

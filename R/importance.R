@@ -73,6 +73,8 @@ permutation_importance <- function(model, newdata, vars = NULL,
          call. = FALSE)
   }
   newdata <- as.data.frame(newdata)
+  # gamm4 and gamm hand back a wrapper that formula() and predict() both refuse.
+  model <- unwrap_gam(model)
 
   metric <- check_choice(metric, c("auto", "auc", "rmse"), "metric")
   if (!is.numeric(n.perm) || length(n.perm) != 1 || n.perm < 1) {

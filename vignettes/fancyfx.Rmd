@@ -67,6 +67,41 @@ combinePlots(gam.fit2, iris,
              title = "Partial effects on petal length")
 ```
 
+## The rest of the GAM family
+
+`bam()` for large data, `gamm4()` and `gamm()` for GAMs fitted through a mixed
+model, and `scam()` for shape-constrained smooths all report a **partial
+effect**, so they are comparable with each other and with `gam()`:
+
+```{r gam-family, eval = requireNamespace("scam", quietly = TRUE), fig.height = 4}
+big <- mgcv::bam(Petal.Length ~ s(Sepal.Length), data = iris)
+
+# A monotone-increasing smooth: the constraint is part of the fit,
+# and survives into the plot.
+constrained <- scam::scam(Petal.Length ~ s(Sepal.Length, bs = "mpi"),
+                          data = iris)
+
+comparePlots(list("Unconstrained (bam)" = big,
+                  "Monotone (scam)" = constrained),
+             iris, "Sepal.Length")
+```
+
+Two of these need the package to intervene, which is worth knowing if you ever
+hit the same classes elsewhere:
+
+* **`scam`** objects inherit from `glm`, not `gam`. Without a method of their
+  own they would fall through to the prediction backend and quietly report a
+  different quantity than every other GAM here.
+* **`gamm4()` and `gamm()`** do not return a fitted model at all. They return a
+  list holding the GAM alongside the mixed-model fit it was estimated through.
+  `formula()`, `predict()` and `marginaleffects` all refuse that wrapper, so
+  `fancyfx` unwraps it to its `$gam` element first.
+
+The random effects stay behind with the wrapper, so a `gamm4` smooth is drawn
+at the population level — consistent with how the package treats mixed models
+generally, and the same caveat applies: the ribbon covers uncertainty in the
+smooth, not variation between groups.
+
 ## Other models
 
 Anything that is not an mgcv GAM is routed through

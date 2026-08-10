@@ -1,6 +1,6 @@
 Package: fancyfx
 Title: Publication-Ready Effect and Evaluation Plots for Models
-Version: 0.3.0
+Version: 0.4.0
 Authors@R:
     person("Camille", "Ross", email = "camille.ross@maine.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1428-2294"))
@@ -11,8 +11,9 @@ Description: Turns fitted models into figures ready for a manuscript. Plots the
     theme with no grid or background panel, lettered panel labels, and a
     categorical palette checked for legibility under colour vision deficiency.
     Works across model types: generalized additive models fitted with 'mgcv' are
-    shown as partial effects via 'gratia', and other models -- including mixed
-    and Bayesian fits -- as predictions via 'marginaleffects'. Provides control
+    shown as partial effects via 'gratia' -- including 'bam', 'gamm4', 'gamm'
+    and shape-constrained 'scam' fits -- and other models, such as mixed and
+    Bayesian ones, as predictions via 'marginaleffects'. Provides control
     over individual terms, factor-smooth interactions, several rug styles,
     variable transformations, and multi-panel layouts comparing either several
     predictors or several competing models. Also plots model evaluation for
@@ -36,12 +37,14 @@ Imports:
 Suggests:
     brms,
     collapse,
+    gamm4,
     glmmTMB,
     knitr,
     lme4,
     mgcv,
     rmarkdown,
     rstanarm,
+    scam,
     testthat (>= 3.0.0),
     yardstick
 VignetteBuilder: knitr

@@ -2,6 +2,9 @@
 
 S3method(effect_estimates,default)
 S3method(effect_estimates,gam)
+S3method(effect_estimates,gamm)
+S3method(effect_estimates,gamm4)
+S3method(effect_estimates,scam)
 export(combinePlots)
 export(comparePlots)
 export(effect_estimates)

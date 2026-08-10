@@ -68,9 +68,12 @@ Every one of these is an argument, so a house style can replace any of them.
 
 \section{Supported models}{
 
-Generalized additive models fitted with \pkg{mgcv} are handled by
-\code{\link[gratia:smooth_estimates]{gratia::smooth_estimates()}}, which reports the \emph{partial effect} of a smooth
-on the link scale. Every other model class is handled by
+Generalized additive models are handled by \code{\link[gratia:smooth_estimates]{gratia::smooth_estimates()}},
+which reports the \emph{partial effect} of a smooth on the link scale. That
+covers \pkg{mgcv}'s \code{gam()} and \code{bam()}, the shape-constrained \code{scam()}, and
+\code{gamm4()} and \code{gamm()} -- the last two being lists that hold a GAM rather
+than fitted models, which are unwrapped to their \verb{$gam} so every other part
+of the package can use them. Every other model class is handled by
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}, which reports \emph{predicted values} with the
 remaining predictors held at representative values -- this covers \code{lm},
 \code{glm}, mixed models from \pkg{lme4} and \pkg{glmmTMB}, and Bayesian fits from

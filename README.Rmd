@@ -214,6 +214,8 @@ between correlated predictors**, which bites hard on environmental covariates.
 | Model | Backend | What you get |
 |---|---|---|
 | `mgcv::gam()`, `bam()` | `gratia` | Partial effect, link scale, centered |
+| `gamm4::gamm4()`, `mgcv::gamm()` | `gratia` | Partial effect, population level |
+| `scam::scam()` | `gratia` | Partial effect, shape constraint preserved |
 | `lm()`, `glm()` | `marginaleffects` | Predicted values |
 | `lme4::lmer()`, `glmer()` | `marginaleffects` | Predicted values, population level |
 | `glmmTMB::glmmTMB()` | `marginaleffects` | Predicted values, population level |
@@ -223,6 +225,14 @@ between correlated predictors**, which bites hard on environmental covariates.
 
 Support beyond those comes from whatever `marginaleffects` handles. The rows
 above are the families verified against real fits.
+
+Everything in the GAM family reports a **partial effect** by default, so those
+rows are comparable with each other. Two get there only because the package
+intervenes: `scam` inherits from `glm` rather than `gam` and would otherwise
+fall through to predictions, and `gamm4`/`gamm` return a *list* holding a GAM
+rather than a fitted model — `formula()`, `predict()` and `marginaleffects` all
+refuse the wrapper, so it is unwrapped to its `$gam` first. The random effects
+stay behind with the wrapper, which is why those rows say population level.
 
 **Bayesian fits** are summarised from posterior draws, which give an interval
 but no standard error — so the ribbon is the credible interval at `level`, and
