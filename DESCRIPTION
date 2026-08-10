@@ -20,12 +20,12 @@ Imports:
     ggpubr,
     gratia (>= 0.9.0),
     marginaleffects (>= 0.20.0),
-    mgcv,
     patchwork,
     rlang,
     stats
 Suggests:
     knitr,
+    mgcv,
     rmarkdown,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
