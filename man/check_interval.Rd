@@ -10,9 +10,11 @@ check_interval(interval)
 \item{interval}{the interval given}
 }
 \value{
-\code{interval}, unchanged
+\code{interval}, with \code{"cri"} normalised to \code{"ci"}
 }
 \description{
-Check an interval name
+\code{"cri"} is accepted as a name for the same computation: under a Bayesian fit
+the backend returns a credible interval, and a user who writes \code{"cri"} to say
+so should not be met with an error.
 }
 \keyword{internal}

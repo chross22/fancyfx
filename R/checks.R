@@ -95,11 +95,16 @@ check_scale <- function(scale) {
 
 #' Check an interval name
 #'
+#' `"cri"` is accepted as a name for the same computation: under a Bayesian fit
+#' the backend returns a credible interval, and a user who writes `"cri"` to say
+#' so should not be met with an error.
+#'
 #' @param interval the interval given
-#' @return `interval`, unchanged
+#' @return `interval`, with `"cri"` normalised to `"ci"`
 #' @keywords internal
 check_interval <- function(interval) {
-  check_choice(interval, c("se", "ci"), "interval")
+  interval <- check_choice(interval, c("auto", "se", "ci", "cri"), "interval")
+  if (interval == "cri") "ci" else interval
 }
 
 #' Check a confidence level

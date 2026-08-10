@@ -32,6 +32,11 @@ tells you that only three observations sit under it.
 above it on a shared x axis. The shape of the effect and the weight of evidence
 behind it end up in the same figure, so they get read together.
 
+The second thing the package is for is getting that figure into a manuscript
+without a further round of fiddling. Defaults are chosen for publication rather
+than exploration — see [Publication-ready output](#publication-ready-output) —
+and each of them is an argument, so a house style can replace any of them.
+
 ```{r idea}
 gam.fit <- mgcv::gam(Petal.Length ~ s(Sepal.Length), data = iris)
 
@@ -147,6 +152,32 @@ group happens to be most common — a different curve entirely. Pass
 One limitation to state plainly: the ribbon reflects uncertainty in the fixed
 effects only. It does not widen to account for variation between groups, so it
 is narrower than a genuine prediction interval for a new group.
+
+## Bayesian models
+
+`brms` and `rstanarm` fits go through the same backend, and the call does not
+change:
+
+```r
+fit <- brms::brm(y ~ x + (1 | g), data = d)
+
+plotEffects(fit, d, "x")
+```
+
+Three things are different underneath, all handled for you:
+
+* A posterior summary gives an **interval but no standard error**, so the ribbon
+  is the credible interval at `level`. There is no `±1 SE` ribbon to be had, and
+  asking for one says so rather than failing. `interval = "cri"` is accepted as
+  a name for the same computation, if you would rather be explicit in your code.
+* `brms` names its random-effects argument **`re_formula`**, not `re.form`.
+  Write either; the translation happens for you.
+* The bounded interval construction used for GLMs is **not available**, so a
+  response-scale interval comes straight from the draws — which respects the
+  bounds anyway, because the draws do.
+
+As with any mixed model, `re.form` defaults to `NA` for the population-level
+effect.
 
 ## What the y axis means
 
@@ -304,10 +335,11 @@ Saving at a fixed size, as a journal will ask for:
 ggplot2::ggsave("figure-1.pdf", p, width = 174, height = 100, units = "mm")
 ```
 
-## Migrating from fancygam
+## Migrating from plotSmooths()
 
-`fancyfx` was called `fancygam` when it only handled GAMs. `plotSmooths()` still
-works and produces an identical plot, but warns once per session:
+`plotSmooths()` was the GAM-only ancestor of `plotEffects()`, from when the
+package handled nothing else. It still works and produces an identical plot, but
+warns once per session:
 
 ```r
 # Old:

@@ -15,9 +15,11 @@
 #'   resolves to whichever is natural for the backend -- `"link"` for a GAM
 #'   partial effect, `"response"` for predictions. See Details: for GAMs this
 #'   chooses between two genuinely different quantities, not two axis scales.
-#' @param interval `"se"` for a `+/- 1` standard error ribbon, `"ci"` for a
-#'   confidence interval at `level`.
-#' @param level Confidence level, used when `interval = "ci"`.
+#' @param interval `"auto"` (the default), `"se"` for a `+/- 1` standard error
+#'   ribbon, or `"ci"` for an interval at `level`. `"auto"` gives the SE ribbon
+#'   except for Bayesian fits, which report no standard error and get their
+#'   credible interval. `"cri"` is another name for `"ci"`.
+#' @param level Interval level, used when `interval = "ci"`.
 #' @param n Number of points at which to evaluate the effect.
 #' @param re.form For a mixed model, which random effects to include. `NA` (the
 #'   default) gives the population-level effect; `NULL` includes all of them.
@@ -32,7 +34,7 @@
 #' * **GAMs on the link scale** go to [gratia::smooth_estimates()], which
 #'   returns the *partial effect* of the smooth: the term's own contribution,
 #'   centered so it averages to zero, with the rest of the model excluded. This
-#'   is what `fancygam`, this package's predecessor, always plotted.
+#'   is what this package drew before it handled anything but GAMs.
 #' * **Everything else** goes to [marginaleffects::predictions()], which returns
 #'   *predicted values* -- the model's actual fitted output as `var` varies,
 #'   with the other predictors held at representative values (means for numeric
@@ -66,8 +68,8 @@
 #'
 #' @export
 effect_estimates <- function(model, var,
-                             scale = c("link", "response"),
-                             interval = c("se", "ci"),
+                             scale = c("auto", "link", "response"),
+                             interval = c("auto", "se", "ci", "cri"),
                              level = 0.95,
                              n = 100,
                              ...) {
@@ -78,7 +80,7 @@ effect_estimates <- function(model, var,
 #' @export
 effect_estimates.gam <- function(model, var,
                                  scale = c("auto", "link", "response"),
-                                 interval = c("se", "ci"),
+                                 interval = c("auto", "se", "ci", "cri"),
                                  level = 0.95,
                                  n = 100,
                                  ...) {
@@ -90,6 +92,9 @@ effect_estimates.gam <- function(model, var,
   # link scale. This is also what this package drew before it handled anything
   # but GAMs, so "auto" keeps old code producing identical plots.
   if (scale == "auto") scale <- "link"
+  # gratia always reports a standard error, so the historical ribbon is always
+  # available on this path.
+  if (interval == "auto") interval <- "se"
 
   # A partial effect is centered on zero and lives on the link scale by
   # construction; there is nothing coherent to hand back for "response" here.
@@ -162,7 +167,7 @@ smooth_group <- function(est) {
 #' @export
 effect_estimates.default <- function(model, var,
                                      scale = c("auto", "link", "response"),
-                                     interval = c("se", "ci"),
+                                     interval = c("auto", "se", "ci", "cri"),
                                      level = 0.95,
                                      n = 100,
                                      re.form = NA,
@@ -188,19 +193,39 @@ effect_estimates.default <- function(model, var,
   grid.args[[var]] <- grid
   newdata <- do.call(marginaleffects::datagrid, grid.args)
 
+  # A model summarised from posterior draws reports an interval and no standard
+  # error, so a +/- 1 SE ribbon is not something it can produce. "auto" asks for
+  # the credible interval there and keeps this package's historical SE ribbon
+  # everywhere else.
+  if (interval == "auto") {
+    interval <- if (is_posterior_model(model)) "ci" else "se"
+  }
+
   # re.form is meaningless to a model with no random effects, and passing it
   # to one is an error rather than a no-op, so it is only forwarded when the
-  # model actually has them.
+  # model actually has them -- under whichever name the class expects.
   if (has_random_effects(model)) {
-    est <- predict_on_scale(model, newdata, scale, interval, level,
-                            re.form = re.form, ...)
+    re.args <- list(re.form)
+    names(re.args) <- re_form_arg(model)
+    est <- do.call(predict_on_scale,
+                   c(list(model, newdata, scale, interval, level),
+                     re.args, list(...)))
   } else {
     est <- predict_on_scale(model, newdata, scale, interval, level, ...)
   }
   est <- as.data.frame(est)
 
-  # marginaleffects reports a confidence interval whatever we asked for, so a
-  # "se" ribbon is rebuilt from std.error rather than read off conf.low/high.
+  # marginaleffects reports an interval whatever we asked for, so a "se" ribbon
+  # is rebuilt from std.error rather than read off conf.low/high.
+  if (interval == "se" && !("std.error" %in% names(est))) {
+    # Reached when a class not recognised as Bayesian still summarises from
+    # draws. Falling back is more useful than failing, but it changes what the
+    # ribbon means, so it is said out loud rather than done quietly.
+    message("This model reports no standard error, so the ribbon shows the ",
+            level * 100, "% interval rather than +/- 1 SE.")
+    interval <- "ci"
+  }
+
   if (interval == "se") {
     lower <- est$estimate - est$std.error
     upper <- est$estimate + est$std.error
@@ -239,18 +264,35 @@ predict_on_scale <- function(model, newdata, scale, interval, level, ...) {
   # exactly the case we default to. Firing that on every panel of every plot is
   # noise, so it is muffled only when re.form is in fact NA. A caller who sets
   # re.form to anything else still hears it, which is when it matters.
-  quiet <- "re.form" %in% names(dots) && length(dots$re.form) == 1 &&
-    is.na(dots$re.form)
+  re.given <- dots[intersect(names(dots), c("re.form", "re_formula"))]
+  re.name <- names(re.given)
+  quiet <- length(re.given) == 1 && length(re.given[[1]]) == 1 &&
+    is.na(re.given[[1]])
+
+  # marginaleffects keeps a whitelist of arguments it knows each model class
+  # accepts and warns about anything outside it, but the list is incomplete:
+  # rstanarm's own posterior_epred() documents the re.form being passed here.
+  # The complaint is about the argument *name*, which this package always
+  # supplies itself, so it is muffled whatever value the caller chose -- the
+  # warning carries no information the caller could act on.
+  ours_unrecognised <- function(w) {
+    length(re.name) == 1 &&
+      grepl("are not known to be supported", conditionMessage(w), fixed = TRUE) &&
+      grepl(re.name, conditionMessage(w), fixed = TRUE)
+  }
+  fixed_effects_only <- function(w) {
+    quiet && grepl("only takes into account the uncertainty in fixed-effect",
+                   conditionMessage(w), fixed = TRUE)
+  }
 
   predict_with <- function(type) {
     call_backend <- function() {
       marginaleffects::predictions(model, newdata = newdata, type = type,
                                    conf_level = level, ...)
     }
-    if (!quiet) return(call_backend())
+    if (!length(re.name)) return(call_backend())
     withCallingHandlers(call_backend(), warning = function(w) {
-      if (grepl("only takes into account the uncertainty in fixed-effect",
-                conditionMessage(w), fixed = TRUE)) {
+      if (fixed_effects_only(w) || ours_unrecognised(w)) {
         invokeRestart("muffleWarning")
       }
     })
@@ -336,6 +378,33 @@ has_random_effects <- function(model) {
   inherits(model, c("merMod", "lmerMod", "glmerMod", "nlmerMod", "lmerModLmerTest",
                     "glmmTMB", "lme", "nlme", "glmmadmb", "MixMod",
                     "brmsfit", "stanreg"))
+}
+
+#' Is this model summarised from posterior draws?
+#'
+#' Such models report an interval computed from the draws and no standard
+#' error, so a `+/- 1 SE` ribbon is not something they can produce.
+#'
+#' @param model A fitted model.
+#' @return `TRUE` for a Bayesian fit, `FALSE` otherwise.
+#' @keywords internal
+is_posterior_model <- function(model) {
+  inherits(model, c("brmsfit", "stanreg", "stanfit"))
+}
+
+#' Name of the random-effects argument for this model class
+#'
+#' \pkg{brms} calls it `re_formula`; \pkg{lme4}, \pkg{glmmTMB} and
+#' \pkg{rstanarm} call it `re.form`. Passing the wrong one to a `brmsfit` still
+#' reaches the prediction function, but `marginaleffects` warns that the
+#' argument is not one it recognises for the class -- noise on every panel, and
+#' a sign the call is relying on something not guaranteed to keep working.
+#'
+#' @param model A fitted model.
+#' @return The argument name, as a string.
+#' @keywords internal
+re_form_arg <- function(model) {
+  if (inherits(model, "brmsfit")) "re_formula" else "re.form"
 }
 
 #' Recover a predictor's observed values from a fitted model

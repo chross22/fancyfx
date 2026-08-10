@@ -16,14 +16,22 @@ nothing in the plot tells you that only three observations sit under it.
 directly above it on a shared x axis, so the shape of the effect and the
 weight of evidence behind it get read together.
 
-It works across model types: GAMs fitted with `mgcv` are shown as
-partial effects via `gratia`, and everything else as predictions via
-`marginaleffects`.
+The second thing it is for is **getting that figure into a manuscript
+without a further round of fiddling**. Defaults are chosen for
+publication rather than for exploration — a clean theme with no grid or
+background panel, lettered panel labels, and a categorical palette
+checked for legibility under colour vision deficiency — so a bare call
+gets you close to the figure you would submit. Every one of those is an
+argument, so a house style can replace any of them.
 
-> **Renamed from `fancygam`.** The package used to handle only GAMs.
-> `plotSmooths()` still works and produces an identical plot, but is
+It works across model types: GAMs fitted with `mgcv` are shown as
+partial effects via `gratia`, and everything else — including mixed and
+Bayesian fits — as predictions via `marginaleffects`.
+
+> **Upgrading?** The package used to handle only GAMs, and was named for
+> it. `plotSmooths()` still works and produces an identical plot, but is
 > deprecated in favour of `plotEffects()` — same arguments, same output.
-> See [Migrating](#migrating-from-fancygam).
+> See [Migrating](#migrating-from-plotsmooths).
 
 ## Installation
 
@@ -150,10 +158,19 @@ and stays separable under simulated protanopia and deuteranopia.
 | `lm()`, `glm()` | `marginaleffects` | Predicted values |
 | `lme4::lmer()`, `glmer()` | `marginaleffects` | Predicted values, population level |
 | `glmmTMB::glmmTMB()` | `marginaleffects` | Predicted values, population level |
+| `brms::brm()` | `marginaleffects` | Predicted values, credible interval |
+| `rstanarm::stan_glm()`, `stan_glmer()` | `marginaleffects` | Predicted values, credible interval |
 | Most other fitted models | `marginaleffects` | Predicted values |
 
-Support beyond those comes from whatever `marginaleffects` handles, and
-is being verified model family by model family — Bayesian fits next.
+Support beyond those comes from whatever `marginaleffects` handles. The
+rows above are the families verified against real fits.
+
+**Bayesian fits** are summarised from posterior draws, which give an
+interval but no standard error — so the ribbon is the credible interval
+at `level`, and there is no `±1 SE` ribbon to be had. Write
+`interval = "cri"` if you would rather say so explicitly; it computes
+the same thing. `brms` takes `re_formula` rather than `re.form`, and
+that translation is handled for you.
 
 For a **mixed model**, `re.form` defaults to `NA`, so the effect is
 drawn at the population level. This matters: left to the backend’s own
@@ -177,7 +194,7 @@ interval.
 
 See `vignette("fancyfx")` for the full discussion.
 
-## Migrating from fancygam
+## Migrating from plotSmooths()
 
 ``` r
 # Old:

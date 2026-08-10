@@ -20,10 +20,12 @@
 #'   gives a GAM its partial effect on the link scale and every other model its
 #'   predictions on the response scale. For a GAM this argument chooses between
 #'   two different quantities, not just two axis scales; see Details.
-#' @param interval `"se"` for a `+/- 1` standard error ribbon (the default, and
-#'   what this package has always drawn), or `"ci"` for a confidence interval at
-#'   `level`.
-#' @param level Confidence level used when `interval = "ci"`. Ignored otherwise.
+#' @param interval `"auto"` (the default), `"se"` for a `+/- 1` standard error
+#'   ribbon, or `"ci"` for an interval at `level`. `"auto"` gives the SE ribbon
+#'   this package has always drawn, except for Bayesian fits, which report no
+#'   standard error and get their credible interval instead. `"cri"` is accepted
+#'   as a name for the same thing as `"ci"`.
+#' @param level Interval level used when `interval = "ci"`. Ignored otherwise.
 #' @param n Number of points at which to evaluate the effect. Ignored for the
 #'   GAM partial-effect path, where \pkg{gratia} chooses the grid.
 #' @param transform Optional parameter indicating how to transform the variable,
@@ -49,7 +51,7 @@
 #'
 #' * A **GAM** is shown as the *partial effect* of the smooth
 #'   -- the term's own contribution, centered to average zero. This is the
-#'   quantity `fancygam`, this package's predecessor, always plotted, and it
+#'   quantity this package drew before it handled anything but GAMs, and it
 #'   remains the default so existing code is unaffected.
 #' * **Any other model**, and a GAM asked for `scale = "response"`, is shown as
 #'   *predicted values*: the model's fitted output as `var` varies, with the
@@ -60,9 +62,16 @@
 #' centered on zero and excludes the rest of the model, the other is not and
 #' does not.
 #'
-#' Note that the default `interval = "se"` ribbon spans roughly 68%, not 95%.
-#' It is the historical default of this package; pass `interval = "ci"` for a
+#' Note that the default `+/- 1 SE` ribbon spans roughly 68%, not 95%. It is
+#' the historical default of this package; pass `interval = "ci"` for a
 #' conventional confidence interval.
+#'
+#' A **Bayesian fit** (\pkg{brms}, \pkg{rstanarm}) is summarised from posterior
+#' draws, which yield an interval but no standard error, so the ribbon is the
+#' credible interval at `level` -- there is no SE ribbon to be had. Write
+#' `interval = "cri"` if you would rather say so explicitly; it computes the
+#' same thing. \pkg{brms} takes `re_formula` rather than `re.form`, and that
+#' translation is handled for you.
 #'
 #' A **factor-smooth interaction**, `s(x, by = f)`, is one smooth per level of
 #' `f`. Those are drawn as separate coloured curves with a legend, rather than
@@ -115,7 +124,7 @@
 #' @export
 plotEffects <- function(model, dat, var, xlab = var, ylab = NULL,
                         scale = c("auto", "link", "response"),
-                        interval = c("se", "ci"),
+                        interval = c("auto", "se", "ci", "cri"),
                         level = 0.95,
                         n = 100,
                         transform = c("none", "log", "log10", "sqrt"),

@@ -1,15 +1,21 @@
 Package: fancyfx
-Title: Flexible Effect Plots for Statistical Models
-Version: 0.1.0
+Title: Publication-Ready Effect Plots for Statistical Models
+Version: 0.2.0
 Authors@R:
     person("Camille", "Ross", email = "camille.ross@maine.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1428-2294"))
-Description: Plots the effect of a predictor with a rug of the raw data stacked
-    directly above it, so a bend in the curve can be read against how much data
-    supports it. Works across model types: generalized additive models fitted
-    with 'mgcv' are shown as partial effects via 'gratia', and other models are
-    shown as predictions via 'marginaleffects'. Provides control over individual
-    terms, several rug styles, variable transformations, and multi-panel layouts.
+Description: Turns fitted models into figures ready for a manuscript. Plots the
+    effect of a predictor with a rug of the raw data stacked directly above it,
+    so a bend in the curve can be read against how much data supports it.
+    Defaults are chosen for publication rather than for exploration: a clean
+    theme with no grid or background panel, lettered panel labels, and a
+    categorical palette checked for legibility under colour vision deficiency.
+    Works across model types: generalized additive models fitted with 'mgcv' are
+    shown as partial effects via 'gratia', and other models -- including mixed
+    and Bayesian fits -- as predictions via 'marginaleffects'. Provides control
+    over individual terms, factor-smooth interactions, several rug styles,
+    variable transformations, and multi-panel layouts comparing either several
+    predictors or several competing models.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -24,11 +30,14 @@ Imports:
     rlang,
     stats
 Suggests:
+    brms,
+    collapse,
     glmmTMB,
     knitr,
     lme4,
     mgcv,
     rmarkdown,
+    rstanarm,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 URL: https://github.com/chross22/fancyfx

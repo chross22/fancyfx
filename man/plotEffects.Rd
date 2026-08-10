@@ -11,7 +11,7 @@ plotEffects(
   xlab = var,
   ylab = NULL,
   scale = c("auto", "link", "response"),
-  interval = c("se", "ci"),
+  interval = c("auto", "se", "ci", "cri"),
   level = 0.95,
   n = 100,
   transform = c("none", "log", "log10", "sqrt"),
@@ -46,11 +46,13 @@ gives a GAM its partial effect on the link scale and every other model its
 predictions on the response scale. For a GAM this argument chooses between
 two different quantities, not just two axis scales; see Details.}
 
-\item{interval}{\code{"se"} for a \verb{+/- 1} standard error ribbon (the default, and
-what this package has always drawn), or \code{"ci"} for a confidence interval at
-\code{level}.}
+\item{interval}{\code{"auto"} (the default), \code{"se"} for a \verb{+/- 1} standard error
+ribbon, or \code{"ci"} for an interval at \code{level}. \code{"auto"} gives the SE ribbon
+this package has always drawn, except for Bayesian fits, which report no
+standard error and get their credible interval instead. \code{"cri"} is accepted
+as a name for the same thing as \code{"ci"}.}
 
-\item{level}{Confidence level used when \code{interval = "ci"}. Ignored otherwise.}
+\item{level}{Interval level used when \code{interval = "ci"}. Ignored otherwise.}
 
 \item{n}{Number of points at which to evaluate the effect. Ignored for the
 GAM partial-effect path, where \pkg{gratia} chooses the grid.}
@@ -94,7 +96,7 @@ What gets plotted depends on the model, because the natural quantity differs:
 \itemize{
 \item A \strong{GAM} is shown as the \emph{partial effect} of the smooth
 -- the term's own contribution, centered to average zero. This is the
-quantity \code{fancygam}, this package's predecessor, always plotted, and it
+quantity this package drew before it handled anything but GAMs, and it
 remains the default so existing code is unaffected.
 \item \strong{Any other model}, and a GAM asked for \code{scale = "response"}, is shown as
 \emph{predicted values}: the model's fitted output as \code{var} varies, with the
@@ -106,9 +108,16 @@ against a prediction as though they were on the same footing -- one is
 centered on zero and excludes the rest of the model, the other is not and
 does not.
 
-Note that the default \code{interval = "se"} ribbon spans roughly 68\%, not 95\%.
-It is the historical default of this package; pass \code{interval = "ci"} for a
+Note that the default \verb{+/- 1 SE} ribbon spans roughly 68\%, not 95\%. It is
+the historical default of this package; pass \code{interval = "ci"} for a
 conventional confidence interval.
+
+A \strong{Bayesian fit} (\pkg{brms}, \pkg{rstanarm}) is summarised from posterior
+draws, which yield an interval but no standard error, so the ribbon is the
+credible interval at \code{level} -- there is no SE ribbon to be had. Write
+\code{interval = "cri"} if you would rather say so explicitly; it computes the
+same thing. \pkg{brms} takes \code{re_formula} rather than \code{re.form}, and that
+translation is handled for you.
 
 A \strong{factor-smooth interaction}, \code{s(x, by = f)}, is one smooth per level of
 \code{f}. Those are drawn as separate coloured curves with a legend, rather than

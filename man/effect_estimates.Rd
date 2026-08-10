@@ -9,8 +9,8 @@
 effect_estimates(
   model,
   var,
-  scale = c("link", "response"),
-  interval = c("se", "ci"),
+  scale = c("auto", "link", "response"),
+  interval = c("auto", "se", "ci", "cri"),
   level = 0.95,
   n = 100,
   ...
@@ -20,7 +20,7 @@ effect_estimates(
   model,
   var,
   scale = c("auto", "link", "response"),
-  interval = c("se", "ci"),
+  interval = c("auto", "se", "ci", "cri"),
   level = 0.95,
   n = 100,
   ...
@@ -30,7 +30,7 @@ effect_estimates(
   model,
   var,
   scale = c("auto", "link", "response"),
-  interval = c("se", "ci"),
+  interval = c("auto", "se", "ci", "cri"),
   level = 0.95,
   n = 100,
   re.form = NA,
@@ -47,10 +47,12 @@ resolves to whichever is natural for the backend -- \code{"link"} for a GAM
 partial effect, \code{"response"} for predictions. See Details: for GAMs this
 chooses between two genuinely different quantities, not two axis scales.}
 
-\item{interval}{\code{"se"} for a \verb{+/- 1} standard error ribbon, \code{"ci"} for a
-confidence interval at \code{level}.}
+\item{interval}{\code{"auto"} (the default), \code{"se"} for a \verb{+/- 1} standard error
+ribbon, or \code{"ci"} for an interval at \code{level}. \code{"auto"} gives the SE ribbon
+except for Bayesian fits, which report no standard error and get their
+credible interval. \code{"cri"} is another name for \code{"ci"}.}
 
-\item{level}{Confidence level, used when \code{interval = "ci"}.}
+\item{level}{Interval level, used when \code{interval = "ci"}.}
 
 \item{n}{Number of points at which to evaluate the effect.}
 
@@ -83,7 +85,7 @@ Two backends, because the two quantities they produce are not the same thing:
 \item \strong{GAMs on the link scale} go to \code{\link[gratia:smooth_estimates]{gratia::smooth_estimates()}}, which
 returns the \emph{partial effect} of the smooth: the term's own contribution,
 centered so it averages to zero, with the rest of the model excluded. This
-is what \code{fancygam}, this package's predecessor, always plotted.
+is what this package drew before it handled anything but GAMs.
 \item \strong{Everything else} goes to \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}, which returns
 \emph{predicted values} -- the model's actual fitted output as \code{var} varies,
 with the other predictors held at representative values (means for numeric

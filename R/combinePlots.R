@@ -43,7 +43,7 @@
 combinePlots <- function(model, dat, vars, title = "",
                          var.transform = c("none", "log", "log10", "sqrt"),
                          scale = c("auto", "link", "response"),
-                         interval = c("se", "ci"),
+                         interval = c("auto", "se", "ci", "cri"),
                          level = 0.95,
                          n = 100,
                          rug.type = c("histogram", "density"),

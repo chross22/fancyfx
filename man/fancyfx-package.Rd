@@ -4,7 +4,7 @@
 \name{fancyfx-package}
 \alias{fancyfx}
 \alias{fancyfx-package}
-\title{fancyfx: Flexible Effect Plots for Statistical Models}
+\title{fancyfx: Publication-Ready Effect Plots for Statistical Models}
 \description{
 An effect curve on its own is easy to over-read. A confident-looking bend at
 the far end of the x axis means very little if only three observations sit
@@ -12,13 +12,37 @@ under it. \code{fancyfx} addresses that by pairing every effect curve with a rug
 the raw data, drawn directly above it on a shared x axis, so the shape of the
 effect and the weight of evidence behind it are read together.
 }
+\details{
+The second thing it is for is getting that figure into a manuscript without
+a further round of fiddling. Defaults are chosen for publication rather than
+for exploration, so the plot you get from a bare call is close to the plot
+you would submit.
+}
 \section{Main functions}{
 
 \describe{
 \item{\code{\link[=plotEffects]{plotEffects()}}}{One predictor: the effect curve with its rug above.}
 \item{\code{\link[=combinePlots]{combinePlots()}}}{Several predictors, arranged and labelled as panels.}
+\item{\code{\link[=comparePlots]{comparePlots()}}}{Several competing models, side by side.}
 \item{\code{\link[=plotRugs]{plotRugs()}}}{The rug on its own, if you want to compose it yourself.}
+\item{\code{\link[=effect_estimates]{effect_estimates()}}}{The tidy numbers behind any of the above.}
 }
+}
+
+\section{Publication-ready by default}{
+
+\code{\link[=theme_fancyfx]{theme_fancyfx()}} is built on \code{\link[ggpubr:theme_pubr]{ggpubr::theme_pubr()}}: no background panel, no
+grid, plain black axis lines, and text sized to survive being shrunk into a
+journal column. Panels are lettered \code{A}, \code{B}, \code{C}, with the style selectable
+for whatever a journal asks for.
+
+Effects split by a factor are coloured with \code{\link[=fancyfx_palette]{fancyfx_palette()}}, chosen by
+search rather than by eye: every colour sits in a mid lightness band, clears
+a 3:1 contrast ratio against a white page, and stays separable under
+simulated protanopia and deuteranopia. A legend is always drawn, so identity
+never rests on colour alone.
+
+Every one of these is an argument, so a house style can replace any of them.
 }
 
 \section{Supported models}{
@@ -27,7 +51,9 @@ Generalized additive models fitted with \pkg{mgcv} are handled by
 \code{\link[gratia:smooth_estimates]{gratia::smooth_estimates()}}, which reports the \emph{partial effect} of a smooth
 on the link scale. Every other model class is handled by
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}, which reports \emph{predicted values} with the
-remaining predictors held at representative values.
+remaining predictors held at representative values -- this covers \code{lm},
+\code{glm}, mixed models from \pkg{lme4} and \pkg{glmmTMB}, and Bayesian fits from
+\pkg{brms} and \pkg{rstanarm}, among many others.
 
 These are different quantities, and \code{fancyfx} does not pretend otherwise: the
 y-axis label changes to say which one you are looking at. See the \code{scale}
