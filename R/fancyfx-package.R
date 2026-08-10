@@ -41,6 +41,20 @@
 #' the data it was fitted to flatters it, so that path warns and annotates the
 #' figure rather than being the quiet default. See `vignette("evaluation")`.
 #'
+#' @section Spatial projections:
+#' For models projected onto a raster, two maps that answer questions a
+#' projection map on its own cannot. \pkg{terra} is a suggested package rather
+#' than a required one, so nothing here is installed for users who never
+#' project.
+#' \describe{
+#'   \item{[plotUncertainty()]}{Where the members of an ensemble disagree.}
+#'   \item{[plotExtrapolation()]}{Where the projection leaves the range of
+#'     conditions the model was fitted under, and is therefore guessing.}
+#'   \item{[ensemble_summary()], [mess()]}{The rasters behind those.}
+#' }
+#'
+#' See `vignette("spatial")`.
+#'
 #' @section Publication-ready by default:
 #' [theme_fancyfx()] is built on [ggpubr::theme_pubr()]: no background panel, no
 #' grid, plain black axis lines, and text sized to survive being shrunk into a

@@ -231,6 +231,59 @@ AUC and TSS are defined for **binary outcomes only** and a continuous response
 is refused rather than scored; and permutation importance **splits credit badly
 between correlated predictors**, which bites hard on environmental covariates.
 
+## Spatial projections
+
+A projection map is a persuasive object. It fills the study area with colour,
+looks identical whether the model had a thousand observations in a region or
+none, and nothing on it separates the part built on evidence from the part built
+on the model's willingness to keep predicting.
+
+Two maps put that distinction back. `terra` is a suggested package, so nothing
+here is installed for users who never project.
+
+```{r fancyfx-spatial, eval = requireNamespace("terra", quietly = TRUE), fig.height = 3.6}
+library(terra)
+
+set.seed(1)
+grid <- rast(nrows = 50, ncols = 65, xmin = -71, xmax = -65,
+             ymin = 41, ymax = 45, crs = "EPSG:4326")
+lon <- init(grid, "x"); lat <- init(grid, "y")
+
+sst <- 14 - 1.2 * (lat - 41) + 0.3 * (lon + 71); names(sst) <- "sst"
+depth <- 20 + 30 * (lon + 71) + 25 * (45 - lat); names(depth) <- "depth"
+covariates <- c(sst, depth)
+
+# A survey covering only the north-west of the domain
+points <- data.frame(lon = runif(400, -71, -67.5), lat = runif(400, 42, 45))
+survey <- cbind(points, extract(covariates, points, ID = FALSE))
+survey$present <- rbinom(400, 1,
+                         plogis(-4 + 0.45 * survey$sst - 0.01 * survey$depth))
+
+# A bootstrap ensemble of projections
+ensemble <- rast(lapply(1:6, function(i) {
+  refit <- mgcv::gam(present ~ s(sst) + s(depth),
+                     data = survey[sample(nrow(survey), replace = TRUE), ],
+                     family = binomial)
+  terra::predict(covariates, refit, type = "response")
+}))
+
+ggpubr::ggarrange(
+  plotUncertainty(ensemble, title = "Ensemble disagreement"),
+  plotExtrapolation(covariates, survey, title = "Novel conditions"),
+  labels = c("A", "B")
+)
+```
+
+The south-east is both where the ensemble disagrees most **and** where the
+projection has left the surveyed envelope — the honest reading being that the
+model has nothing to say about it.
+
+`plotExtrapolation()` draws a MESS surface: below zero, a cell is outside the
+training range of at least one covariate. It works one covariate at a time,
+though, so it cannot see novel *combinations* of individually ordinary values —
+treat a clean surface as the absence of one specific problem, not permission to
+project. See `vignette("spatial")`.
+
 ## Supported models
 
 | Model | Backend | What you get |

@@ -1,6 +1,6 @@
 Package: fancyfx
 Title: Publication-Ready Effect and Evaluation Plots for Models
-Version: 0.5.0
+Version: 0.6.0
 Authors@R:
     person("Camille", "Ross", email = "camille.ross@maine.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1428-2294"))
@@ -21,7 +21,9 @@ Description: Turns fitted models into figures ready for a manuscript. Plots the
     skill statistic against the decision threshold, calibration curves asking
     whether predicted probabilities are honest, and permutation importance --
     which require evaluation data explicitly and mark any figure scored on the
-    data the model was fitted to.
+    data the model was fitted to. For spatial projections, maps the
+    disagreement between ensemble members and flags where a projection leaves
+    the range of conditions the model was fitted under.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -46,6 +48,7 @@ Suggests:
     rmarkdown,
     rstanarm,
     scam,
+    terra,
     testthat (>= 3.0.0),
     yardstick
 VignetteBuilder: knitr

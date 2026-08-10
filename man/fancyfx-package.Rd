@@ -52,6 +52,22 @@ the data it was fitted to flatters it, so that path warns and annotates the
 figure rather than being the quiet default. See \code{vignette("evaluation")}.
 }
 
+\section{Spatial projections}{
+
+For models projected onto a raster, two maps that answer questions a
+projection map on its own cannot. \pkg{terra} is a suggested package rather
+than a required one, so nothing here is installed for users who never
+project.
+\describe{
+\item{\code{\link[=plotUncertainty]{plotUncertainty()}}}{Where the members of an ensemble disagree.}
+\item{\code{\link[=plotExtrapolation]{plotExtrapolation()}}}{Where the projection leaves the range of
+conditions the model was fitted under, and is therefore guessing.}
+\item{\code{\link[=ensemble_summary]{ensemble_summary()}}, \code{\link[=mess]{mess()}}}{The rasters behind those.}
+}
+
+See \code{vignette("spatial")}.
+}
+
 \section{Publication-ready by default}{
 
 \code{\link[=theme_fancyfx]{theme_fancyfx()}} is built on \code{\link[ggpubr:theme_pubr]{ggpubr::theme_pubr()}}: no background panel, no
