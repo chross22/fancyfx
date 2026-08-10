@@ -1,4 +1,4 @@
-#' fancyfx: Publication-Ready Effect Plots for Statistical Models
+#' fancyfx: Publication-Ready Effect and Evaluation Plots for Models
 #'
 #' An effect curve on its own is easy to over-read. A confident-looking bend at
 #' the far end of the x axis means very little if only three observations sit
@@ -11,7 +11,7 @@
 #' for exploration, so the plot you get from a bare call is close to the plot
 #' you would submit.
 #'
-#' @section Main functions:
+#' @section Effect plots:
 #' \describe{
 #'   \item{[plotEffects()]}{One predictor: the effect curve with its rug above.}
 #'   \item{[combinePlots()]}{Several predictors, arranged and labelled as panels.}
@@ -19,6 +19,25 @@
 #'   \item{[plotRugs()]}{The rug on its own, if you want to compose it yourself.}
 #'   \item{[effect_estimates()]}{The tidy numbers behind any of the above.}
 #' }
+#'
+#' @section Evaluation plots:
+#' Effect plots say what a model claims; these ask whether it has earned the
+#' claim. They are for presence/absence models, since AUC and TSS are defined
+#' for a binary outcome and nothing else.
+#' \describe{
+#'   \item{[plotROC()]}{Discrimination: sensitivity against the false positive
+#'     rate, with AUC.}
+#'   \item{[plotThreshold()]}{Where to cut: sensitivity, specificity and TSS
+#'     across every threshold.}
+#'   \item{[plotImportance()]}{Which predictors the model is leaning on, by
+#'     permutation.}
+#'   \item{[threshold_metrics()], [permutation_importance()]}{The tidy numbers
+#'     behind those.}
+#' }
+#'
+#' Every one of these requires evaluation data explicitly. Scoring a model on
+#' the data it was fitted to flatters it, so that path warns and annotates the
+#' figure rather than being the quiet default. See `vignette("evaluation")`.
 #'
 #' @section Publication-ready by default:
 #' [theme_fancyfx()] is built on [ggpubr::theme_pubr()]: no background panel, no

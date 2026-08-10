@@ -1,0 +1,207 @@
+---
+title: "Evaluating a model"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Evaluating a model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  out.width = "100%"
+)
+```
+
+```{r setup}
+library(fancyfx)
+```
+
+An effect plot says what a model claims. This vignette is about the other
+question: whether to believe it.
+
+Everything here is aimed at **presence/absence models** — the species
+distribution case, where the response is whether something was there. AUC and
+TSS are defined for a binary outcome and nothing else, so applied to a Gaussian
+model of biomass they would return a number with no meaning. `fancyfx` refuses
+that rather than computing it.
+
+## A worked example
+
+```{r data}
+set.seed(1)
+d <- data.frame(x1 = runif(600, 1, 10),
+                x2 = runif(600, 1, 10),
+                x3 = runif(600, 1, 10))
+# Only x1 carries any signal.
+d$y <- rbinom(600, 1, plogis(-3 + 0.6 * d$x1))
+
+train <- d[1:300, ]
+test  <- d[301:600, ]
+
+sdm <- glm(y ~ x1 + x2 + x3, data = train, family = binomial)
+```
+
+## The most important thing on this page
+
+`newdata` is a **required** argument to every function here. There is no default,
+and the default is not the training data.
+
+That is deliberate. A model scored against the data it was fitted to flatters
+itself, sometimes enormously, and an in-sample ROC curve can look excellent for
+a model with no predictive value at all. Making that the easiest figure to
+produce would be a disservice.
+
+Passing the training data still works — refusing outright would be obstructive,
+and sometimes it is genuinely what you want — but it warns, and the figure is
+annotated so it cannot be quietly published as validation:
+
+```{r in-sample, fig.height = 5, warning = FALSE}
+plotROC(sdm, train, title = "Scored on the training data")
+```
+
+Read the caption. Compare it with the honest version:
+
+```{r out-of-sample, fig.height = 5}
+plotROC(sdm, test, title = "Scored on held-out data")
+```
+
+## Discrimination: the ROC curve
+
+The ROC curve traces sensitivity against the false positive rate as the decision
+threshold moves. The diagonal is chance. AUC summarises the whole curve into the
+probability that a randomly chosen presence is ranked above a randomly chosen
+absence.
+
+`fancyfx` computes AUC from ranks — the Mann-Whitney form — rather than by
+integrating the drawn curve, so tied predictions are handled exactly. The curve
+itself is drawn as a step function, because that is what an empirical ROC is;
+joining the corners would draw operating points the model cannot reach.
+
+The numbers are available on their own:
+
+```{r metrics}
+m <- threshold_metrics(sdm, test)
+
+attr(m, "auc")
+attr(m, "prevalence")
+head(m, 3)
+```
+
+## Choosing a cutoff
+
+AUC is threshold-free, which is its strength and its limitation: it says how
+well the model ranks, and nothing about where to cut. For that:
+
+```{r threshold}
+plotThreshold(sdm, test)
+```
+
+Sensitivity and specificity trade off against each other, and TSS
+[@allouche2006] is their sum less one — so its peak, marked with the dashed
+line, is the cutoff balancing them best. TSS is preferred to raw accuracy in
+species distribution work because it is not inflated by a rare positive class.
+
+That peak is *one* defensible choice, not the only one. If a false absence costs
+more than a false presence — a missed occurrence of something you are trying to
+protect — then the right cutoff is not where TSS peaks. Both curves are drawn so
+that judgement can be made rather than assumed.
+
+```{r threshold-tss}
+# TSS alone, without the curves it is built from
+plotThreshold(sdm, test, metrics = "tss", mark.best = TRUE)
+```
+
+## Cross-validation, and why it is weaker
+
+Folds are supported, and drawn per fold so the spread is visible rather than
+averaged into a single reassuring number:
+
+```{r folds, fig.height = 5}
+set.seed(2)
+folds <- sample(rep(1:4, length.out = nrow(test)))
+
+plotROC(sdm, test, folds = folds)
+```
+
+The first time you use `folds` in a session, the package says something you
+should read. Cross-validated metrics are **weaker evidence than an independent
+hold-out**: the folds come from the same sample, and the model saw the rest of
+it. A cross-validated score speaks to how stable the fit is, not to how it will
+behave somewhere new.
+
+For spatial models the gap is wider still. With random folds, a held-out point
+usually has a near neighbour among the training folds, so the model has in
+effect already seen it, and the score is optimistic for reasons that have
+nothing to do with the model being good. **Spatially blocked folds** are the
+honest version — blocks of contiguous space held out together, so the
+distance between training and testing data is real. Packages such as
+`blockCV` generate them; pass the resulting fold IDs straight in.
+
+The spread across folds is the part worth reading. If the AUC range is wide, or
+the TSS-maximising cutoff moves substantially between folds, then reporting a
+single threshold to three decimal places is false precision.
+
+## Variable importance
+
+Which predictors is the model actually leaning on?
+
+```{r importance, fig.height = 3.5}
+plotImportance(sdm, test, n.perm = 20)
+```
+
+The measure is **permutation importance** [@breiman2001]: shuffle one predictor,
+breaking its relationship with the response while leaving its distribution
+intact, and see how much worse the model scores. For a binary response the
+metric is the drop in AUC; otherwise the increase in RMSE. Either way, bigger
+means the model was relying on it more.
+
+It is model-agnostic — it needs nothing but the ability to predict — so a GAM, a
+GLM, a mixed model and a Bayesian fit all give numbers that mean the same thing
+and can be compared.
+
+The point is drawn at the mean and the line spans the permutations. The **spread
+is the point**: a variable whose range crosses the dashed zero line did no
+measurable work, and a bar chart of means would hide that. Here `x1` is doing
+everything and `x2` and `x3` are doing nothing, which is exactly how the data
+were simulated.
+
+Because permutation is random, results are seeded by default — an unseeded
+figure cannot be redrawn. The caller's random stream is restored afterwards, so
+this does not silently change results elsewhere in your script.
+
+### Two things it does not tell you
+
+**Correlated predictors share credit badly.** If two variables carry much the
+same information, permuting either one alone barely hurts, because the other
+still carries it. Both look unimportant and the pair is not. This bites hard on
+environmental covariates, which are routinely collinear — sea surface
+temperature and depth, say. If a variable you expect to matter shows near-zero
+importance, check what it is correlated with before concluding anything.
+
+**It measures use, not effect size.** A variable can be important here and have
+an effect too small to care about, or the reverse. Read it beside
+`plotEffects()`, not instead of it:
+
+```{r importance-and-effect, fig.height = 4}
+ggpubr::ggarrange(
+  plotImportance(sdm, test, n.perm = 20),
+  plotEffects(sdm, train, "x1", scale = "response",
+              ylab = "P(presence)"),
+  labels = c("A", "B"), widths = c(1, 1.1)
+)
+```
+
+## Putting it in a paper
+
+Everything here uses the same theme, palette and panel machinery as the effect
+plots, so an evaluation figure and an effect figure sit together without
+adjustment. See the "Publication-ready output" section of `vignette("fancyfx")`
+for `base_size`, panel labels and saving at a fixed size.
+
+## References

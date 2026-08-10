@@ -5,19 +5,19 @@
 test_that("plotSmooths warns that it is deprecated and points at the replacement", {
   # The guard fires once per session, so clear it or an earlier test may have
   # already used up the one warning.
-  reset_deprecation_warnings()
+  reset_notices()
 
   expect_warning(plotSmooths(make_test_gam(), test_data(), "x1"),
                  "plotSmooths\\(\\) is deprecated")
 
-  reset_deprecation_warnings()
+  reset_notices()
   expect_warning(plotSmooths(make_test_gam(), test_data(), "x1"),
                  "Use plotEffects\\(\\)")
 })
 
 test_that("plotSmooths warns only once per session", {
   # Warning on every call would make a loop over variables unreadable.
-  reset_deprecation_warnings()
+  reset_notices()
   suppress_deprecation(plotSmooths(make_test_gam(), test_data(), "x1"))
 
   expect_no_warning(plotSmooths(make_test_gam(), test_data(), "x1"))

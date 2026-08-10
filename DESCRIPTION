@@ -1,6 +1,6 @@
 Package: fancyfx
-Title: Publication-Ready Effect Plots for Statistical Models
-Version: 0.2.0
+Title: Publication-Ready Effect and Evaluation Plots for Models
+Version: 0.3.0
 Authors@R:
     person("Camille", "Ross", email = "camille.ross@maine.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1428-2294"))
@@ -15,7 +15,11 @@ Description: Turns fitted models into figures ready for a manuscript. Plots the
     and Bayesian fits -- as predictions via 'marginaleffects'. Provides control
     over individual terms, factor-smooth interactions, several rug styles,
     variable transformations, and multi-panel layouts comparing either several
-    predictors or several competing models.
+    predictors or several competing models. Also plots model evaluation for
+    presence/absence models -- ROC curves with area under the curve, the true
+    skill statistic against the decision threshold, and permutation importance
+    -- which require evaluation data explicitly and mark any figure scored on
+    the data the model was fitted to.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -38,7 +42,8 @@ Suggests:
     mgcv,
     rmarkdown,
     rstanarm,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    yardstick
 VignetteBuilder: knitr
 URL: https://github.com/chross22/fancyfx
 BugReports: https://github.com/chross22/fancyfx/issues

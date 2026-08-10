@@ -4,7 +4,7 @@
 \name{fancyfx-package}
 \alias{fancyfx}
 \alias{fancyfx-package}
-\title{fancyfx: Publication-Ready Effect Plots for Statistical Models}
+\title{fancyfx: Publication-Ready Effect and Evaluation Plots for Models}
 \description{
 An effect curve on its own is easy to over-read. A confident-looking bend at
 the far end of the x axis means very little if only three observations sit
@@ -18,7 +18,7 @@ a further round of fiddling. Defaults are chosen for publication rather than
 for exploration, so the plot you get from a bare call is close to the plot
 you would submit.
 }
-\section{Main functions}{
+\section{Effect plots}{
 
 \describe{
 \item{\code{\link[=plotEffects]{plotEffects()}}}{One predictor: the effect curve with its rug above.}
@@ -27,6 +27,27 @@ you would submit.
 \item{\code{\link[=plotRugs]{plotRugs()}}}{The rug on its own, if you want to compose it yourself.}
 \item{\code{\link[=effect_estimates]{effect_estimates()}}}{The tidy numbers behind any of the above.}
 }
+}
+
+\section{Evaluation plots}{
+
+Effect plots say what a model claims; these ask whether it has earned the
+claim. They are for presence/absence models, since AUC and TSS are defined
+for a binary outcome and nothing else.
+\describe{
+\item{\code{\link[=plotROC]{plotROC()}}}{Discrimination: sensitivity against the false positive
+rate, with AUC.}
+\item{\code{\link[=plotThreshold]{plotThreshold()}}}{Where to cut: sensitivity, specificity and TSS
+across every threshold.}
+\item{\code{\link[=plotImportance]{plotImportance()}}}{Which predictors the model is leaning on, by
+permutation.}
+\item{\code{\link[=threshold_metrics]{threshold_metrics()}}, \code{\link[=permutation_importance]{permutation_importance()}}}{The tidy numbers
+behind those.}
+}
+
+Every one of these requires evaluation data explicitly. Scoring a model on
+the data it was fitted to flatters it, so that path warns and annotates the
+figure rather than being the quiet default. See \code{vignette("evaluation")}.
 }
 
 \section{Publication-ready by default}{

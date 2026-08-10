@@ -38,6 +38,10 @@ It works across model types: GAMs fitted with `mgcv` are shown as partial
 effects via `gratia`, and everything else — including mixed and Bayesian fits —
 as predictions via `marginaleffects`.
 
+Alongside the effect plots are **model evaluation plots** — ROC/AUC, the
+TSS-versus-threshold trade-off, and permutation importance — which ask whether
+the model earns the effects it reports.
+
 > **Upgrading?** The package used to handle only GAMs, and was named for it.
 > `plotSmooths()` still works and produces an identical plot, but is deprecated
 > in favour of `plotEffects()` — same arguments, same output. See
@@ -148,6 +152,62 @@ Curves that split by a factor use `fancyfx_palette()`, a six-colour categorical
 palette chosen by search rather than by eye: every colour sits in a mid
 lightness band, clears 3:1 contrast against a white page, and stays separable
 under simulated protanopia and deuteranopia.
+
+## Evaluating a model
+
+Effect plots say what a model claims. These say whether to believe it.
+
+`plotROC()` and `plotThreshold()` cover presence/absence models — the
+discrimination and cutoff questions respectively — and `plotImportance()` covers
+which predictors the model is actually leaning on.
+
+```{r fancyfx-eval, fig.height = 4}
+set.seed(1)
+d <- data.frame(x1 = runif(600, 1, 10), x2 = runif(600, 1, 10),
+                x3 = runif(600, 1, 10))
+d$y <- rbinom(600, 1, plogis(-3 + 0.6 * d$x1))
+train <- d[1:300, ]
+test  <- d[301:600, ]
+
+sdm <- glm(y ~ x1 + x2 + x3, data = train, family = binomial)
+
+ggpubr::ggarrange(
+  plotROC(sdm, test),
+  plotImportance(sdm, test, n.perm = 20),
+  labels = c("A", "B"), widths = c(1, 1.2)
+)
+```
+
+A ROC curve says how well the model *ranks*; it does not tell you where to cut.
+`plotThreshold()` does — sensitivity and specificity against the cutoff, with
+the TSS-maximising threshold marked:
+
+```{r fancyfx-threshold, fig.height = 4}
+plotThreshold(sdm, test)
+```
+
+### Evaluation data is required, on purpose
+
+`newdata` is a required argument, and passing the training data warns and
+annotates the figure as in-sample. This is deliberate: an in-sample ROC can look
+excellent for a model with no predictive value at all, and the easiest figure to
+produce should not be the misleading one.
+
+Cross-validation folds are supported via `folds`, drawn per fold so the spread
+is visible rather than averaged away — but they come with a note, because
+cross-validated metrics are weaker evidence than an independent hold-out. For
+spatial models the gap is wider still: with random folds a held-out point
+usually has a near neighbour among the training folds, so the model has in
+effect already seen it. Use spatially blocked folds.
+
+```r
+plotROC(sdm, test, folds = spatial_block_ids)
+```
+
+Two caveats the functions state in their own documentation, worth repeating:
+AUC and TSS are defined for **binary outcomes only** and a continuous response
+is refused rather than scored; and permutation importance **splits credit badly
+between correlated predictors**, which bites hard on environmental covariates.
 
 ## Supported models
 

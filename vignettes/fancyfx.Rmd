@@ -352,6 +352,19 @@ plotEffects(gam.fit, iris, "Sepal.Length")
 The defaults (`scale = "auto"`, `interval = "se"`) reproduce exactly what
 `plotSmooths()` drew for a GAM, so migrating is a rename and nothing more.
 
+## Evaluating the model
+
+Everything above is about what a model *claims*. Whether it has earned the claim
+is a separate question, with its own functions — `plotROC()`, `plotThreshold()`
+and `plotImportance()` — and its own vignette:
+
+```r
+vignette("evaluation")
+```
+
+They share this package's theme, palette and panel machinery, so an evaluation
+figure and an effect figure sit together in one manuscript without adjustment.
+
 ## How to cite
 
 ```r

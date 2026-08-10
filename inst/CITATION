@@ -3,7 +3,7 @@ citHeader("To cite fancyfx in publications, please cite the software itself.")
 bibentry(
   bibtype  = "Manual",
   key      = "fancyfx",
-  title    = "{fancyfx}: Flexible Effect Plots for Statistical Models",
+  title    = "{fancyfx}: Publication-Ready Effect and Evaluation Plots for Models",
   author   = person("Camille", "Ross",
                     comment = c(ORCID = "0000-0002-1428-2294")),
   year     = format(Sys.Date(), "%Y"),
