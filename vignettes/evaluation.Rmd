@@ -290,6 +290,42 @@ A low value is not a reason to throw the model away. It is a reason to use
 spatially blocked folds, or to sample the test absences to match the presences'
 distance distribution — and then to say which you did.
 
+## Predictions you already have
+
+Everything above takes a fitted model and re-predicts. That keeps the scored
+predictions and the model provably in step, but it assumes you are holding a
+model that can reproduce them — and a cross-validated workflow is not.
+
+Under k-fold cross-validation, each observation is predicted by the one fold
+model that never saw it. Those honest predictions live across `k` models, none
+of which is the final fit. Re-predicting from the final model on the same rows
+answers a different and more flattering question.
+
+`held_out()` is the way in for those. Wrap the observed outcomes and the
+predictions that were actually made for them, and pass the result anywhere a
+model would go:
+
+```{r held-out}
+set.seed(1)
+truth <- rbinom(200, 1, 0.3)
+score <- plogis(rnorm(200, ifelse(truth == 1, 1, -1)))
+
+pairs <- held_out(truth, score)
+
+attr(threshold_metrics(pairs), "auc")
+```
+
+```{r held-out-plot, fig.height = 5}
+plotROC(pairs, title = "Scored from stored cross-validated predictions")
+```
+
+Two honest limits. It cannot verify the predictions are out of sample — nothing
+in a pair of numeric vectors records which model made them — so `in.sample` is
+taken on trust, and passing training predictions here gets no warning, unlike
+the model path which inspects the fit. And it cannot support
+`plotImportance()`, which has to shuffle a predictor and re-predict; that needs
+a model by construction, not a record of what one once said.
+
 ## Variable importance
 
 Which predictors is the model actually leaning on?

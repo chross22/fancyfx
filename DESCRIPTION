@@ -1,6 +1,6 @@
 Package: fancyfx
 Title: Publication-Ready Effect and Evaluation Plots for Models
-Version: 0.8.0
+Version: 0.9.0
 Authors@R:
     person("Camille", "Ross", email = "camille.ross@maine.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1428-2294"))
@@ -21,8 +21,10 @@ Description: Turns fitted models into figures ready for a manuscript. Plots the
     skill statistic against the decision threshold, calibration curves asking
     whether predicted probabilities are honest, and permutation importance --
     which require evaluation data explicitly and mark any figure scored on the
-    data the model was fitted to. For spatial projections, maps the
-    disagreement between ensemble members, flags where a projection leaves the
+    data the model was fitted to, or accepting stored cross-validated
+    predictions where no single model can reproduce them. For spatial
+    projections, maps the disagreement between ensemble members, flags where a
+    projection leaves the
     range of conditions the model was fitted under, and aggregates rasters or
     point data into hexagonal bins. Includes several diagnostics that species
     distribution work relies on: spatial sorting bias in a train/test split,
