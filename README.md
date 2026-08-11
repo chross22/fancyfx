@@ -407,6 +407,15 @@ plotEffects(gam.fit, iris, "Sepal.Length")
 The defaults reproduce exactly what `plotSmooths()` drew for a GAM, so
 migrating is a rename and nothing more.
 
+## Why it does what it does
+
+Several defaults here are deliberate rather than conventional —
+evaluation data being required, `re.form = NA` for mixed models,
+`na.rm = FALSE` when summarising an ensemble, a `±1 SE` ribbon rather
+than 95%. Each has a reason, and the reasons are gathered in
+[DECISIONS.md](DECISIONS.md) with the measurements behind them, so a
+choice can be looked up and defended without hunting through help pages.
+
 ## How to cite
 
 ``` r
