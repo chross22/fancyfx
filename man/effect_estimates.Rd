@@ -80,9 +80,8 @@ partial effect, \code{"response"} for predictions. See Details: for GAMs this
 chooses between two genuinely different quantities, not two axis scales.}
 
 \item{interval}{\code{"auto"} (the default), \code{"se"} for a \verb{+/- 1} standard error
-ribbon, or \code{"ci"} for an interval at \code{level}. \code{"auto"} gives the SE ribbon
-except for Bayesian fits, which report no standard error and get their
-credible interval. \code{"cri"} is another name for \code{"ci"}.}
+ribbon, or \code{"ci"} for an interval at \code{level}. \code{"auto"} gives a pointwise
+interval at \code{level}, 95\% by default. \code{"cri"} is another name for \code{"ci"}.}
 
 \item{level}{Interval level, used when \code{interval = "ci"}.}
 

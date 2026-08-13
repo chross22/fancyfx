@@ -68,12 +68,33 @@ for every supported class.
 
 ## 2. Uncertainty
 
-### The default ribbon is ±1 SE, about 68%, not 95%
+### The default ribbon is a 95% pointwise interval
 
-This is the package's historical default, kept so that figures made with
-earlier versions do not silently change meaning. It is documented wherever it
-appears, because a reader who assumes 95% will misread the figure.
-`interval = "ci"` gives a conventional interval.
+Changed in 0.10.0. It was `±1 SE` — roughly 68% — inherited from the package's
+GAM-only origins and kept for backward compatibility.
+
+That was the weakest default in the package, and the reason is comparative:
+
+| | Ribbon | Width on one test smooth |
+|---|---|---|
+| `fancyfx` before 0.10.0 | ±1 SE | **0.104** (~68%) |
+| `mgcv::plot.gam()` | ±2 SE | 0.207 (~95%) |
+| `gratia::draw()` | 95% CI | 0.203 |
+
+**Half the width of what both mgcv and gratia draw.** A reader seeing a ribbon
+on a GAM smooth will assume 95%, and a caption saying otherwise does not travel
+with the figure into a manuscript. That is precisely the quiet misreading this
+package exists to prevent: the rug is there so nobody over-reads a curve, and
+the ribbon was then under-reporting the uncertainty by half.
+
+Backward compatibility was a real argument and it lost, because the package had
+already been renamed, its scope had widened well past GAMs, and it had not
+reached 1.0. If a default was going to change, that was the moment.
+
+`interval = "se"` still gives the narrow band — now as an explicit request
+rather than a silent default. `plotSmooths()`, the deprecated GAM-only
+ancestor, **pins `interval = "se"`**: its entire contract is that old code keeps
+drawing what it always drew, so it did not follow the change.
 
 ### Simultaneous bands for GAM smooths
 

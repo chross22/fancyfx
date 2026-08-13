@@ -28,10 +28,13 @@ test_that("plotSmooths still returns the plot it always did", {
   model <- make_test_gam()
 
   old <- suppress_deprecation(plotSmooths(model, dat, "x1", xlab = "X1"))
-  new <- plotEffects(model, dat, "x1", xlab = "X1")
+  # plotSmooths() pins interval = "se" on purpose: it exists so old code keeps
+  # drawing what it always drew, and plotEffects() has since moved its default
+  # to a 95% interval. Compared against that pinned setting, not the new one.
+  new <- plotEffects(model, dat, "x1", xlab = "X1", interval = "se")
 
   expect_s3_class(old, "patchwork")
-  # Same defaults, same quantity, same data underneath.
+  # Same quantity, same data underneath.
   expect_equal(effect_panel(old)$labels, effect_panel(new)$labels)
   expect_equal(effect_panel(old)$data, effect_panel(new)$data)
 })

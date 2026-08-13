@@ -49,10 +49,8 @@ two different quantities, not just two axis scales; see Details.}
 \item{interval}{\code{"auto"} (the default), \code{"se"} for a \verb{+/- 1} standard error
 ribbon, \code{"ci"} for a pointwise interval at \code{level}, or \code{"simultaneous"}
 for a band covering the whole curve at \code{level} -- GAM partial effects
-only. \code{"auto"} gives the SE ribbon this package has always drawn, except
-for Bayesian fits, which report no standard error and get their credible
-interval instead. \code{"cri"} is accepted as a name for the same thing as
-\code{"ci"}.}
+only. \code{"auto"} gives a pointwise interval at \code{level}, which is 95\% by
+default. \code{"cri"} is accepted as a name for the same thing as \code{"ci"}.}
 
 \item{level}{Interval level used when \code{interval = "ci"}. Ignored otherwise.}
 
@@ -110,9 +108,12 @@ against a prediction as though they were on the same footing -- one is
 centered on zero and excludes the rest of the model, the other is not and
 does not.
 
-Note that the default \verb{+/- 1 SE} ribbon spans roughly 68\%, not 95\%. It is
-the historical default of this package; pass \code{interval = "ci"} for a
-conventional confidence interval.
+The default ribbon is a \strong{95\% pointwise interval}, matching
+\code{\link[mgcv:plot.gam]{mgcv::plot.gam()}}, which draws \verb{+/- 2 SE}, and \code{\link[gratia:draw]{gratia::draw()}}, which draws
+95\%. Earlier versions of this package drew \verb{+/- 1 SE} -- roughly 68\%, half
+the width of both -- which a reader seeing a ribbon on a smooth would very
+likely misread as 95\%. Pass \code{interval = "se"} for that narrower band, now
+that asking for it is explicit.
 
 For a GAM smooth, \code{interval = "simultaneous"} draws a band covering the
 whole curve rather than each point separately. A pointwise interval covers

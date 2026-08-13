@@ -23,9 +23,10 @@ test_that("the gam method reproduces gratia's smooth estimates", {
 
   expect_equal(est$.x, reference$x1)
   expect_equal(est$.estimate, reference$.estimate)
-  # Default interval is +/- 1 SE, the ribbon this package has always drawn.
-  expect_equal(est$.lower, reference$.estimate - reference$.se)
-  expect_equal(est$.upper, reference$.estimate + reference$.se)
+  # The default is a 95% pointwise interval, matching mgcv and gratia.
+  critical <- stats::qnorm(0.975)
+  expect_equal(est$.lower, reference$.estimate - critical * reference$.se)
+  expect_equal(est$.upper, reference$.estimate + critical * reference$.se)
 })
 
 test_that("scale = 'auto' picks the natural quantity per backend", {

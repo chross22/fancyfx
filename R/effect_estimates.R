@@ -16,9 +16,8 @@
 #'   partial effect, `"response"` for predictions. See Details: for GAMs this
 #'   chooses between two genuinely different quantities, not two axis scales.
 #' @param interval `"auto"` (the default), `"se"` for a `+/- 1` standard error
-#'   ribbon, or `"ci"` for an interval at `level`. `"auto"` gives the SE ribbon
-#'   except for Bayesian fits, which report no standard error and get their
-#'   credible interval. `"cri"` is another name for `"ci"`.
+#'   ribbon, or `"ci"` for an interval at `level`. `"auto"` gives a pointwise
+#'   interval at `level`, 95% by default. `"cri"` is another name for `"ci"`.
 #' @param level Interval level, used when `interval = "ci"`.
 #' @param n Number of points at which to evaluate the effect.
 #' @param data Optional data frame to take the predictor's range from, for
@@ -96,9 +95,11 @@ effect_estimates.gam <- function(model, var,
   # link scale. This is also what this package drew before it handled anything
   # but GAMs, so "auto" keeps old code producing identical plots.
   if (scale == "auto") scale <- "link"
-  # gratia always reports a standard error, so the historical ribbon is always
-  # available on this path.
-  if (interval == "auto") interval <- "se"
+  # A 95% interval, matching mgcv::plot.gam (which draws +/- 2 SE) and
+  # gratia::draw() (which draws 95%). This package once drew +/- 1 SE, about
+  # 68% -- half the width of both -- and a reader seeing a ribbon on a smooth
+  # will assume 95%. interval = "se" still gives the narrow band, explicitly.
+  if (interval == "auto") interval <- "ci"
 
   # A partial effect is centered on zero and lives on the link scale by
   # construction; there is nothing coherent to hand back for "response" here.
@@ -129,7 +130,7 @@ effect_estimates.scam <- function(model, var,
   check_level(level)
 
   if (scale == "auto") scale <- "link"
-  if (interval == "auto") interval <- "se"
+  if (interval == "auto") interval <- "ci"
 
   if (scale == "response") {
     return(NextMethod())
@@ -399,9 +400,9 @@ effect_estimates.default <- function(model, var,
   # error, so a +/- 1 SE ribbon is not something it can produce. "auto" asks for
   # the credible interval there and keeps this package's historical SE ribbon
   # everywhere else.
-  if (interval == "auto") {
-    interval <- if (is_posterior_model(model)) "ci" else "se"
-  }
+  # 95% throughout: a Bayesian fit reports an interval and no standard error,
+  # and for every other class "ci" matches what the rest of the ecosystem draws.
+  if (interval == "auto") interval <- "ci"
 
   # re.form is meaningless to a model with no random effects, and passing it
   # to one is an error rather than a no-op, so it is only forwarded when the
@@ -514,11 +515,26 @@ predict_on_scale <- function(model, newdata, scale, interval, level, ...) {
   # the estimate, so there is no single standard error to build a +/- 1 SE
   # ribbon from -- marginaleffects returns no std.error column at all here.
   if (scale == "response" && interval == "ci") {
-    bounded <- tryCatch(predict_with("invlink(link)"),
-                        error = function(e) {
-                          if (unsupported_type(e)) NULL else stop(e)
-                        })
-    if (!is.null(bounded)) return(bounded)
+    # This is an attempt whose result may be thrown away, so its warnings are
+    # held back rather than emitted. Otherwise a class that does not support
+    # the bounded form warns once here and again on the real call, and the
+    # caller sees the same complaint twice about one plot.
+    held <- list()
+    bounded <- withCallingHandlers(
+      tryCatch(predict_with("invlink(link)"),
+               error = function(e) {
+                 if (unsupported_type(e)) NULL else stop(e)
+               }),
+      warning = function(w) {
+        held[[length(held) + 1]] <<- w
+        invokeRestart("muffleWarning")
+      }
+    )
+    if (!is.null(bounded)) {
+      # Kept after all, so anything it had to say still gets said.
+      for (w in held) warning(w)
+      return(bounded)
+    }
   }
 
   tryCatch(

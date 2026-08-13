@@ -256,8 +256,10 @@ round(c(partial = mean(partial$.estimate),
 ### The ribbon
 
 The default `interval = "se"` draws a `± 1` standard error band, which spans
-roughly 68%. This is the historical default of this package, kept so existing
-figures do not silently change. For a conventional 95% interval, ask for one:
+roughly 68%. That was this package's default until version 0.10.0, which is
+half the width of what `mgcv::plot.gam()` and `gratia::draw()` show and a width
+most readers would assume was 95%. The default is now a 95% pointwise interval;
+`interval = "se"` gives the narrow band, explicitly:
 
 ```{r intervals}
 plotEffects(lm.fit, mtcars, "wt", interval = "ci", level = 0.95)

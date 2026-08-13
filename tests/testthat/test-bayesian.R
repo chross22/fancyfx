@@ -61,15 +61,40 @@ test_that("interval = 'cri' and 'ci' agree on a frequentist fit too", {
                effect_estimates(model, "x1", interval = "ci"))
 })
 
-test_that("interval = 'auto' keeps the historical SE ribbon off the Bayesian path", {
-  # "auto" must not quietly widen every existing plot to a 95% interval.
-  se <- effect_estimates(make_test_lm(), "x1", interval = "se")
-  auto <- effect_estimates(make_test_lm(), "x1", interval = "auto")
-  expect_equal(auto$.lower, se$.lower)
+test_that("interval = 'auto' gives a 95% interval, not the narrower SE band", {
+  # The package once drew +/- 1 SE, roughly 68% -- half the width of what
+  # mgcv::plot.gam and gratia::draw() show, and a width a reader seeing a
+  # ribbon on a smooth would very likely misread as 95%.
+  for (model in list(make_test_lm(), make_test_gam())) {
+    auto <- effect_estimates(model, "x1", interval = "auto")
+    ci <- effect_estimates(model, "x1", interval = "ci")
+    se <- effect_estimates(model, "x1", interval = "se")
 
-  gam.se <- effect_estimates(make_test_gam(), "x1", interval = "se")
-  gam.auto <- effect_estimates(make_test_gam(), "x1", interval = "auto")
-  expect_equal(gam.auto$.lower, gam.se$.lower)
+    expect_equal(auto$.lower, ci$.lower)
+    expect_gt(mean(auto$.upper - auto$.lower), mean(se$.upper - se$.lower))
+  }
+})
+
+test_that("the default GAM ribbon is about twice the +/- 1 SE band", {
+  # A 95% normal interval is qnorm(0.975) = 1.96 standard errors either side,
+  # so it should be almost exactly twice as wide.
+  model <- make_test_gam()
+  wide <- effect_estimates(model, "x1", interval = "auto")
+  narrow <- effect_estimates(model, "x1", interval = "se")
+
+  ratio <- mean(wide$.upper - wide$.lower) / mean(narrow$.upper - narrow$.lower)
+  expect_equal(ratio, stats::qnorm(0.975), tolerance = 1e-6)
+})
+
+test_that("interval = 'se' still gives the narrow band, now explicitly", {
+  model <- make_test_gam()
+  est <- effect_estimates(model, "x1", interval = "se")
+  reference <- gratia::smooth_estimates(model, select = "x1", dist = 0.1,
+                                        partial_match = TRUE)
+  reference <- as.data.frame(reference)
+  reference <- reference[order(reference$x1), , drop = FALSE]
+
+  expect_equal(est$.lower, reference$.estimate - reference$.se)
 })
 
 # ── Integration: needs a compiled Stan model ──────────────────────────────────

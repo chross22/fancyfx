@@ -94,3 +94,26 @@ test_that("plotEffects and comparePlots accept mixed models", {
     comparePlots(list(mixed = fit, flat = lm(y ~ x, data = d)), d, "x")
   )
 })
+
+test_that("a discarded bounded attempt does not warn twice about one plot", {
+  # With interval = "ci" the response path tries the bounded construction
+  # first. When a class does not support it, that attempt is thrown away --
+  # and its warnings with it, or the caller sees the same complaint twice.
+  skip_if_no("lme4")
+  d <- make_mixed_data()
+  fit <- lme4::lmer(y ~ x + (1 | g), data = d)
+
+  count_warnings <- function(expr) {
+    n <- 0
+    withCallingHandlers(expr, warning = function(w) {
+      n <<- n + 1
+      invokeRestart("muffleWarning")
+    })
+    n
+  }
+
+  expect_equal(count_warnings(effect_estimates(fit, "x", re.form = NULL,
+                                               interval = "ci")),
+               count_warnings(effect_estimates(fit, "x", re.form = NULL,
+                                               interval = "se")))
+})

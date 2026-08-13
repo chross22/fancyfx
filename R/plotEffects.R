@@ -23,10 +23,8 @@
 #' @param interval `"auto"` (the default), `"se"` for a `+/- 1` standard error
 #'   ribbon, `"ci"` for a pointwise interval at `level`, or `"simultaneous"`
 #'   for a band covering the whole curve at `level` -- GAM partial effects
-#'   only. `"auto"` gives the SE ribbon this package has always drawn, except
-#'   for Bayesian fits, which report no standard error and get their credible
-#'   interval instead. `"cri"` is accepted as a name for the same thing as
-#'   `"ci"`.
+#'   only. `"auto"` gives a pointwise interval at `level`, which is 95% by
+#'   default. `"cri"` is accepted as a name for the same thing as `"ci"`.
 #' @param level Interval level used when `interval = "ci"`. Ignored otherwise.
 #' @param n Number of points at which to evaluate the effect. Ignored for the
 #'   GAM partial-effect path, where \pkg{gratia} chooses the grid.
@@ -64,9 +62,12 @@
 #' centered on zero and excludes the rest of the model, the other is not and
 #' does not.
 #'
-#' Note that the default `+/- 1 SE` ribbon spans roughly 68%, not 95%. It is
-#' the historical default of this package; pass `interval = "ci"` for a
-#' conventional confidence interval.
+#' The default ribbon is a **95% pointwise interval**, matching
+#' [mgcv::plot.gam()], which draws `+/- 2 SE`, and [gratia::draw()], which draws
+#' 95%. Earlier versions of this package drew `+/- 1 SE` -- roughly 68%, half
+#' the width of both -- which a reader seeing a ribbon on a smooth would very
+#' likely misread as 95%. Pass `interval = "se"` for that narrower band, now
+#' that asking for it is explicit.
 #'
 #' For a GAM smooth, `interval = "simultaneous"` draws a band covering the
 #' whole curve rather than each point separately. A pointwise interval covers
