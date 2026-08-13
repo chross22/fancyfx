@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using these metadata."
+type: software
+title: "fancyfx: Publication-Ready Effect and Evaluation Plots for Models"
+abstract: >-
+  Turns fitted models into figures ready for a manuscript. Plots the effect of a
+  predictor with a rug of the raw data stacked directly above it, so a bend in
+  the curve can be read against how much data supports it. Works across model
+  types: generalized additive models fitted with mgcv are shown as partial
+  effects via gratia, and other models, including mixed and Bayesian ones, as
+  predictions via marginaleffects. Also plots model evaluation for
+  presence/absence models, and diagnostics that species distribution work
+  relies on: spatial sorting bias, spatial thinning, projection uncertainty,
+  extrapolation surfaces, and niche overlap.
+authors:
+  - family-names: Ross
+    given-names: Camille
+    email: camille.ross@maine.edu
+    orcid: "https://orcid.org/0000-0002-1428-2294"
+    affiliation: "University of Maine"
+version: 0.10.0
+date-released: "2026-08-13"
+license: MIT
+repository-code: "https://github.com/chross22/fancyfx"
+url: "https://github.com/chross22/fancyfx"
+keywords:
+  - R
+  - r-package
+  - ggplot2
+  - data-visualization
+  - statistics
+  - regression
+  - generalized-additive-models
+  - mgcv
+  - gratia
+  - marginaleffects
+  - partial-effects
+  - marginal-effects
+  - species-distribution-modelling
+  - model-evaluation
