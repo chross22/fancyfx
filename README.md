@@ -1,34 +1,37 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
 
 # fancyfx
 
 <!-- badges: start -->
-
 [![R-CMD-check](https://github.com/chross22/fancyfx/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/chross22/fancyfx/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-An effect curve on its own is easy to over-interpret. A model could
-draw a confident-looking bend at the far right of the x axis, and
-nothing in the plot would tell you that only three observations sit under it.
+An effect curve on its own is easy to over-interpret. A model could draw a
+confident-looking bend at the far right of the x axis, and nothing in the plot
+would tell you that only three observations sit under it.
 
-`fancyfx` pairs every effect curve with a rug of the raw data, drawn
-directly above it on a shared x axis, so the shape of the effect and the
-weight of evidence behind it get read together. Additionally, `fancyfx` returns manuscript
+`fancyfx` pairs every effect curve with a rug of the raw data, drawn directly
+above it on a shared x axis, so the shape of the effect and the weight of
+evidence behind it get read together. Additionally, `fancyfx` returns manuscript
 ready figures without having to fiddle with settings. Defaults are chosen for
-publication rather than for exploration — a clean theme with no grid or
-background panel, lettered panel labels, and a categorical palette
-checked for legibility under colour vision deficiency — so a bare call
-gets you close to the figure you would submit. Every one of those is an
-argument, so a house style can replace any of them.
+publication rather than for exploration — a clean theme with no grid or background panel, lettered panel
+labels, and a categorical palette checked for legibility under colour vision
+deficiency — so a bare call gets you close to the figure you would submit. Every
+one of those is an argument, so a house style can replace any of them.
 
-It works across model types: GAMs fitted with `mgcv` are shown as
-partial effects via `gratia`, and everything else — including mixed and
-Bayesian fits — as predictions via `marginaleffects`.
+It works across model types: GAMs fitted with `mgcv` are shown as partial
+effects via `gratia`, and everything else — including mixed and Bayesian fits —
+as predictions via `marginaleffects`.
 
 Alongside the effect plots are **model evaluation plots** — ROC/AUC, the
-TSS-versus-threshold trade-off, and permutation importance — which ask
-whether the model earns the effects it reports.
+TSS-versus-threshold trade-off, and permutation importance — which ask whether
+the model earns the effects it reports.
 
 ## Installation
 
@@ -42,6 +45,7 @@ devtools::install_github("chross22/fancyfx")
 
 ## Example
 
+
 ``` r
 library(fancyfx)
 
@@ -51,11 +55,15 @@ gam.fit <- mgcv::gam(Petal.Length ~ s(Sepal.Length), data = iris)
 plotEffects(gam.fit, iris, "Sepal.Length", xlab = "Sepal length (cm)")
 ```
 
-<img src="man/figures/README-fancyfx-gam-1.png" alt="" width="100%" />
+<div class="figure">
+<img src="man/figures/README-fancyfx-gam-1.png" alt="plot of chunk fancyfx-gam" width="100%" />
+<p class="caption">plot of chunk fancyfx-gam</p>
+</div>
 
 The histogram along the top is the point: where it is thin, be careful.
 
 Several terms can be shown at once, each keeping its own rug:
+
 
 ``` r
 gam.fit2 <- mgcv::gam(Petal.Length ~ s(Sepal.Length) + s(Petal.Width),
@@ -65,10 +73,14 @@ combinePlots(gam.fit2, iris, vars = c("Sepal.Length", "Petal.Width"),
              title = "Partial effects on petal length")
 ```
 
-<img src="man/figures/README-fancyfx-multi-1.png" alt="" width="100%" />
+<div class="figure">
+<img src="man/figures/README-fancyfx-multi-1.png" alt="plot of chunk fancyfx-multi" width="100%" />
+<p class="caption">plot of chunk fancyfx-multi</p>
+</div>
 
-Non-GAM models take exactly the same call. Here a logistic regression,
-on the scale of the outcome, with a 95% interval:
+Non-GAM models take exactly the same call. Here a logistic regression, on the
+scale of the outcome, with a 95% interval:
+
 
 ``` r
 glm.fit <- glm(am ~ wt + hp, data = mtcars, family = binomial)
@@ -79,14 +91,18 @@ plotEffects(glm.fit, mtcars, "wt",
             ylab = "P(manual transmission)")
 ```
 
-<img src="man/figures/README-fancyfx-glm-1.png" alt="" width="100%" />
+<div class="figure">
+<img src="man/figures/README-fancyfx-glm-1.png" alt="plot of chunk fancyfx-glm" width="100%" />
+<p class="caption">plot of chunk fancyfx-glm</p>
+</div>
 
 ## Comparing models
 
-`comparePlots()` holds the variable fixed and varies the *model*, which
-is how you check whether a modelling choice bought you anything. A
-factor-smooth interaction is drawn as one curve per level, with a
-colourblind-safe palette and a legend:
+`comparePlots()` holds the variable fixed and varies the *model*, which is how
+you check whether a modelling choice bought you anything. A factor-smooth
+interaction is drawn as one curve per level, with a colourblind-safe palette
+and a legend:
+
 
 ``` r
 plain <- mgcv::gam(Petal.Length ~ s(Sepal.Length), data = iris)
@@ -99,13 +115,17 @@ comparePlots(list("Single smooth" = plain,
              title = "Is a factor-smooth interaction worth it?")
 ```
 
-<img src="man/figures/README-fancyfx-compare-1.png" alt="" width="100%" />
+<div class="figure">
+<img src="man/figures/README-fancyfx-compare-1.png" alt="plot of chunk fancyfx-compare" width="100%" />
+<p class="caption">plot of chunk fancyfx-compare</p>
+</div>
 
 ## Rug styles
 
-`rug.type` picks how the raw data is summarised above the curve. A
-histogram shows counts and reads well at moderate sample sizes; a
-density is smoother and works better when a histogram would be noisy.
+`rug.type` picks how the raw data is summarised above the curve. A histogram
+shows counts and reads well at moderate sample sizes; a density is smoother and
+works better when a histogram would be noisy.
+
 
 ``` r
 lm.fit <- lm(mpg ~ wt + hp, data = mtcars)
@@ -119,16 +139,18 @@ ggpubr::ggarrange(
 )
 ```
 
-<img src="man/figures/README-fancyfx-rugs-1.png" alt="" width="100%" />
+<div class="figure">
+<img src="man/figures/README-fancyfx-rugs-1.png" alt="plot of chunk fancyfx-rugs" width="100%" />
+<p class="caption">plot of chunk fancyfx-rugs</p>
+</div>
 
 ## Publication-ready by default
 
-Plots use `theme_fancyfx()`, built on `ggpubr::theme_pubr()`: no
-background panel, no grid, plain axis lines, and text sized to survive
-being shrunk into a column. Panels are labelled `A`, `B`, `C` by
-default.
+Plots use `theme_fancyfx()`, built on `ggpubr::theme_pubr()`: no background
+panel, no grid, plain axis lines, and text sized to survive being shrunk into a
+column. Panels are labelled `A`, `B`, `C` by default.
 
-``` r
+```r
 # Bigger text for a narrow figure — scales every element together
 plotEffects(fit, dat, "x", theme = theme_fancyfx(base_size = 16))
 
@@ -153,19 +175,20 @@ combinePlots(fit, dat, vars, labels = c("Panel one", "Panel two"))
 plotEffects(fit, dat, "x", theme = ggplot2::theme_minimal())
 ```
 
-Curves that split by a factor use `fancyfx_palette()`, a six-colour
-categorical palette chosen by search rather than by eye: every colour
-sits in a mid lightness band, clears 3:1 contrast against a white page,
-and stays separable under simulated protanopia and deuteranopia.
+Curves that split by a factor use `fancyfx_palette()`, a six-colour categorical
+palette chosen by search rather than by eye: every colour sits in a mid
+lightness band, clears 3:1 contrast against a white page, and stays separable
+under simulated protanopia and deuteranopia.
 
 ## Evaluating a model
 
 Effect plots say what a model claims. These say whether to believe it.
 
 For presence/absence models, `plotROC()` covers discrimination,
-`plotThreshold()` covers where to cut, and `plotCalibration()` covers
-whether the probabilities are honest. `plotImportance()` covers which
-predictors the model is actually leaning on, for any model type.
+`plotThreshold()` covers where to cut, and `plotCalibration()` covers whether
+the probabilities are honest. `plotImportance()` covers which predictors the
+model is actually leaning on, for any model type.
+
 
 ``` r
 set.seed(1)
@@ -184,105 +207,86 @@ ggpubr::ggarrange(
 )
 ```
 
-<img src="man/figures/README-fancyfx-eval-1.png" alt="" width="100%" />
+<div class="figure">
+<img src="man/figures/README-fancyfx-eval-1.png" alt="plot of chunk fancyfx-eval" width="100%" />
+<p class="caption">plot of chunk fancyfx-eval</p>
+</div>
 
-A ROC curve says how well the model *ranks*; it does not tell you where
-to cut. `plotThreshold()` does — sensitivity and specificity against the
-cutoff, with the TSS-maximising threshold marked:
+A ROC curve says how well the model *ranks*; it does not tell you where to cut.
+`plotThreshold()` does — sensitivity and specificity against the cutoff, with
+the TSS-maximising threshold marked:
+
 
 ``` r
 plotThreshold(sdm, test)
 ```
 
-<img src="man/figures/README-fancyfx-threshold-1.png" alt="" width="100%" />
+<div class="figure">
+<img src="man/figures/README-fancyfx-threshold-1.png" alt="plot of chunk fancyfx-threshold" width="100%" />
+<p class="caption">plot of chunk fancyfx-threshold</p>
+</div>
 
 And neither says whether the probabilities themselves are *honest*.
-`plotCalibration()` does: a model that says 0.7 should be right about
-70% of the time.
+`plotCalibration()` does: a model that says 0.7 should be right about 70% of
+the time.
+
 
 ``` r
 plotCalibration(sdm, test)
 ```
 
-<img src="man/figures/README-fancyfx-calibration-1.png" alt="" width="100%" />
+<div class="figure">
+<img src="man/figures/README-fancyfx-calibration-1.png" alt="plot of chunk fancyfx-calibration" width="100%" />
+<p class="caption">plot of chunk fancyfx-calibration</p>
+</div>
 
-This is a genuinely separate question from discrimination, and AUC
-cannot answer it. AUC only cares about ranking, so it is unchanged by
-any monotone rescaling of the predictions — a model can post an
-excellent AUC while every probability it reports is far too extreme. If
-those probabilities feed a decision, an area calculation, or an expected
-count, calibration is the property that matters. The reported slope
-makes it concrete: 1 is perfect, below 1 means over-confident.
+Discrimination and calibration are genuinely separate questions, and AUC cannot
+answer the second: it only cares about ranking, so it is unchanged by any
+monotone rescaling — a model can post an excellent AUC while every probability
+it reports is far too extreme. The reported slope makes it concrete: 1 is
+perfect, below 1 means over-confident.
 
-Note the rug here too. Calibration is usually worst at the extremes, and
-the extremes usually hold the fewest predictions — so the most
-eye-catching departures from the diagonal are often the least
-trustworthy points on the plot. The rug and the interval on each bin
-both say so.
+Note the rug. Calibration is usually worst at the extremes, and the extremes
+usually hold the fewest predictions, so the most eye-catching departures from
+the diagonal are often the least trustworthy points on the plot.
 
-`calc_deviance()` covers what AUC cannot: AUC only cares about ranking
-and will not notice predictions that are ordered correctly but wrong.
-Deviance penalises confident mistakes hardest, and against the null
-deviance gives the proportion explained that boosted-regression-tree
-work reports as standard.
+Three defaults here are deliberate. **`newdata` is required**, and passing the
+training data warns and annotates the figure as in-sample — an in-sample ROC can
+look excellent for a model with no predictive value, and the easiest figure to
+produce should not be the misleading one. **Folds are drawn per fold** rather
+than averaged, and come with a note, because cross-validated metrics are weaker
+evidence than an independent hold-out — for spatial models, use spatially
+blocked folds. And **`spatial_sorting_bias()`** says how far a split falls short
+of independence: near 1 it is doing its job, near 0 the test presences sit so
+close to the training data that AUC is measuring the split rather than the
+species.
 
-### Is the hold-out actually independent?
+Two limits the functions state themselves: AUC and TSS are defined for **binary
+outcomes only**, and permutation importance **splits credit badly between
+correlated predictors**, which bites hard on environmental covariates.
 
-`spatial_sorting_bias()` checks the assumption every metric above rests
-on. It is the ratio of two mean nearest-neighbour distances — test
-presences to training presences, over test absences to training
-presences.
-
-``` r
-spatial_sorting_bias(test.presences, test.absences, training.presences)
-#>  presence   absence       ssb
-#>     0.381    20.434     0.019
-```
-
-Near 1, the split is doing its job. Near 0, the test presences sit much
-closer to the training data than the absences do, and a model can score
-well on proximity alone — its AUC is measuring the split rather than the
-species. This is the quantity behind the cross-validation warnings
-above: they say the problem exists, this says how bad it is for your
-split.
-
-### Evaluation data is required, on purpose
-
-`newdata` is a required argument, and passing the training data warns
-and annotates the figure as in-sample. This is deliberate: an in-sample
-ROC can look excellent for a model with no predictive value at all, and
-the easiest figure to produce should not be the misleading one.
-
-Cross-validation folds are supported via `folds`, drawn per fold so the
-spread is visible rather than averaged away — but they come with a note,
-because cross-validated metrics are weaker evidence than an independent
-hold-out. For spatial models the gap is wider still: with random folds a
-held-out point usually has a near neighbour among the training folds, so
-the model has in effect already seen it. Use spatially blocked folds.
-
-``` r
-plotROC(sdm, test, folds = spatial_block_ids)
-```
-
-Two caveats the functions state in their own documentation, worth
-repeating: AUC and TSS are defined for **binary outcomes only** and a
-continuous response is refused rather than scored; and permutation
-importance **splits credit badly between correlated predictors**, which
-bites hard on environmental covariates.
+→ [**Evaluating a model**](vignettes/evaluation.Rmd) covers all of it, plus
+deviance, variable importance, and how to put it in a paper.
 
 ## Spatial projections
 
-A projection map is a persuasive object. It fills the study area with
-colour, looks identical whether the model had a thousand observations in
-a region or none, and nothing on it separates the part built on evidence
-from the part built on the model’s willingness to keep predicting.
+A projection map is a persuasive object. It fills the study area with colour,
+looks identical whether the model had a thousand observations in a region or
+none, and nothing on it separates the part built on evidence from the part built
+on the model's willingness to keep predicting.
 
-Two maps put that distinction back. `terra` is a suggested package, so
-nothing here is installed for users who never project.
+Two maps put that distinction back. `terra` is a suggested package, so nothing
+here is installed for users who never project.
+
 
 ``` r
 library(terra)
 #> terra 1.9.34
+#> 
+#> Attaching package: 'terra'
+#> The following objects are masked from 'package:testthat':
+#> 
+#>     compare, describe
 
 set.seed(1)
 grid <- rast(nrows = 50, ncols = 65, xmin = -71, xmax = -65,
@@ -314,28 +318,32 @@ ggpubr::ggarrange(
 )
 ```
 
-<img src="man/figures/README-fancyfx-spatial-1.png" alt="" width="100%" />
+<div class="figure">
+<img src="man/figures/README-fancyfx-spatial-1.png" alt="plot of chunk fancyfx-spatial" width="100%" />
+<p class="caption">plot of chunk fancyfx-spatial</p>
+</div>
 
-The south-east is both where the ensemble disagrees most **and** where
-the projection has left the surveyed envelope — the honest reading being
-that the model has nothing to say about it.
+The south-east is both where the ensemble disagrees most **and** where the
+projection has left the surveyed envelope — the honest reading being that the
+model has nothing to say about it.
 
-`plotExtrapolation()` draws a MESS surface: below zero, a cell is
-outside the training range of at least one covariate. It works one
-covariate at a time, though, so it cannot see novel *combinations* of
-individually ordinary values — treat a clean surface as the absence of
-one specific problem, not permission to project.
+`plotExtrapolation()` draws a MESS surface: below zero, a cell is outside the
+training range of at least one covariate. It works one covariate at a time, so
+it cannot see novel *combinations* of individually ordinary values — treat a
+clean surface as the absence of one specific problem, not permission to project.
 
-Also here: `hex_bin()` and `plotHexbin()` aggregate a raster or point
-data into a hexagonal lattice; `thin_points()` thins records where
-clustering reflects survey effort rather than the species; and
-`niche_overlap()` with `niche_equivalency()` compare two predicted
-distributions against a randomisation null. See `vignette("spatial")`.
+Also here: `hex_bin()` and `plotHexbin()` aggregate a raster or point data into a
+hexagonal lattice; `thin_points()` thins records where clustering reflects survey
+effort rather than the species; and `niche_overlap()` with `niche_equivalency()`
+compare two predicted distributions against a randomisation null.
+
+→ [**Spatial projections**](vignettes/spatial.Rmd) covers large rasters,
+hexagonal binning, thinning uneven effort, and comparing two distributions.
 
 ## Supported models
 
 | Model | Backend | What you get |
-|----|----|----|
+|---|---|---|
 | `mgcv::gam()`, `bam()` | `gratia` | Partial effect, link scale, centered |
 | `gamm4::gamm4()`, `mgcv::gamm()` | `gratia` | Partial effect, population level |
 | `scam::scam()` | `gratia` | Partial effect, shape constraint preserved |
@@ -346,52 +354,33 @@ distributions against a randomisation null. See `vignette("spatial")`.
 | `rstanarm::stan_glm()`, `stan_glmer()` | `marginaleffects` | Predicted values, credible interval |
 | Most other fitted models | `marginaleffects` | Predicted values |
 
-Support beyond those comes from whatever `marginaleffects` handles. The
-rows above are the families verified against real fits.
+Support beyond those comes from whatever `marginaleffects` handles; the rows
+above are the families verified against real fits.
 
-Everything in the GAM family reports a **partial effect** by default, so
-those rows are comparable with each other. Two get there only because
-the package intervenes: `scam` inherits from `glm` rather than `gam` and
-would otherwise fall through to predictions, and `gamm4`/`gamm` return a
-*list* holding a GAM rather than a fitted model — `formula()`,
-`predict()` and `marginaleffects` all refuse the wrapper, so it is
-unwrapped to its `$gam` first. The random effects stay behind with the
-wrapper, which is why those rows say population level.
+The two backends compute **different quantities**, and this is the caveat worth
+reading. A partial effect is one term's contribution in isolation, centered so it
+averages to zero. A predicted value is the model's fitted output with the other
+predictors held at representative values. `fancyfx` labels the y axis with
+whichever it computed, and they should not be compared as though they were on the
+same footing.
 
-**Bayesian fits** are summarised from posterior draws, which give an
-interval but no standard error — so the ribbon is the credible interval
-at `level`, and there is no `±1 SE` ribbon to be had. Write
-`interval = "cri"` if you would rather say so explicitly; it computes
-the same thing. `brms` takes `re_formula` rather than `re.form`, and
-that translation is handled for you.
+Everything in the GAM family reports a partial effect by default, so those rows
+are comparable with each other — `scam` and `gamm4`/`gamm` only because the
+package intervenes to unwrap them. Bayesian fits are summarised from posterior
+draws, so the ribbon is a credible interval and there is no `±1 SE` to be had.
+For a mixed model `re.form` defaults to `NA`, so the effect is drawn at the
+population level rather than for one arbitrary group.
 
-For a **mixed model**, `re.form` defaults to `NA`, so the effect is
-drawn at the population level. This matters: left to the backend’s own
-default, the grouping factor is held at its modal level and the plot
-silently shows the effect for one arbitrary group. Note that the ribbon
-covers uncertainty in the fixed effects only.
+The default ribbon is a **95% pointwise interval**, matching `mgcv::plot.gam()`
+and `gratia::draw()`. Until 0.10.0 this package drew ±1 SE — roughly 68%, half
+the width, and a width most readers would assume was 95%. Pass `interval = "se"`
+for that narrower band, or `interval = "simultaneous"` on a GAM smooth.
 
-### A caveat worth reading
-
-The two backends compute **different quantities**. A partial effect is
-one term’s contribution in isolation, centered so it averages to zero. A
-predicted value is the model’s fitted output with the other predictors
-held at representative values. `fancyfx` labels the y axis with
-whichever it computed, and you should not compare them as though they
-were on the same footing.
-
-The default ribbon is a **95% pointwise interval**, matching
-`mgcv::plot.gam()` (which draws ±2 SE) and `gratia::draw()`. Until
-version 0.10.0 this package drew ±1 SE — roughly 68%, half the width of
-both, and a width most readers would assume was 95%. Pass
-`interval = "se"` for that narrower band, or `interval = "simultaneous"`
-on a GAM smooth for a band covering the whole curve.
-
-See `vignette("fancyfx")` for the full discussion.
+→ [**Getting started**](vignettes/fancyfx.Rmd) has the full discussion.
 
 ## Migrating from plotSmooths()
 
-``` r
+```r
 # Old:
 plotSmooths(gam.fit, iris, "Sepal.Length")
 
@@ -404,19 +393,27 @@ migrating is a rename and nothing more.
 
 ## Why it does what it does
 
-Several defaults here are deliberate rather than conventional —
-evaluation data being required, `re.form = NA` for mixed models,
-`na.rm = FALSE` when summarising an ensemble, the choice of a 95% ribbon
-over `±1 SE`. Each has a reason, and the reasons are gathered in
-[DECISIONS.md](DECISIONS.md) with the measurements behind them, so a
-choice can be looked up and defended without hunting through help pages.
+Several defaults here are deliberate rather than conventional — evaluation data
+being required, `re.form = NA` for mixed models, `na.rm = FALSE` when
+summarising an ensemble, the choice of a 95% ribbon over `±1 SE`. Each has a reason,
+and the reasons are gathered in [DECISIONS.md](DECISIONS.md) with the
+measurements behind them, so a choice can be looked up and defended without
+hunting through help pages.
+
+## Documentation
+
+| | |
+|---|---|
+| [Getting started](vignettes/fancyfx.Rmd) | effect plots, the backends, and what the ribbon means |
+| [Evaluating a model](vignettes/evaluation.Rmd) | ROC, thresholds, calibration, deviance, importance |
+| [Spatial projections](vignettes/spatial.Rmd) | uncertainty and extrapolation maps, hexbins, thinning |
 
 ## How to cite
 
-``` r
+```r
 citation("fancyfx")
 ```
 
-`fancyfx` is a plotting layer over other people’s estimation work.
-Please also cite whichever package computed your effects: `gratia` and
-`mgcv` for GAM partial effects, `marginaleffects` otherwise.
+`fancyfx` is a plotting layer over other people's estimation work. Please also
+cite whichever package computed your effects: `gratia` and `mgcv` for GAM
+partial effects, `marginaleffects` otherwise.
