@@ -8,16 +8,14 @@
 [![R-CMD-check](https://github.com/chross22/fancyfx/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/chross22/fancyfx/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-An effect curve on its own is easy to over-read. A model will happily
+An effect curve on its own is easy to over-interpret. A model could
 draw a confident-looking bend at the far right of the x axis, and
-nothing in the plot tells you that only three observations sit under it.
+nothing in the plot would tell you that only three observations sit under it.
 
 `fancyfx` pairs every effect curve with a rug of the raw data, drawn
 directly above it on a shared x axis, so the shape of the effect and the
-weight of evidence behind it get read together.
-
-The second thing it is for is **getting that figure into a manuscript
-without a further round of fiddling**. Defaults are chosen for
+weight of evidence behind it get read together. Additionally, `fancyfx` returns manuscript
+ready figures without having to fiddle with settings. Defaults are chosen for
 publication rather than for exploration — a clean theme with no grid or
 background panel, lettered panel labels, and a categorical palette
 checked for legibility under colour vision deficiency — so a bare call
@@ -31,11 +29,6 @@ Bayesian fits — as predictions via `marginaleffects`.
 Alongside the effect plots are **model evaluation plots** — ROC/AUC, the
 TSS-versus-threshold trade-off, and permutation importance — which ask
 whether the model earns the effects it reports.
-
-> **Upgrading?** The package used to handle only GAMs, and was named for
-> it. `plotSmooths()` still works and produces an identical plot, but is
-> deprecated in favour of `plotEffects()` — same arguments, same output.
-> See [Migrating](#migrating-from-plotsmooths).
 
 ## Installation
 
