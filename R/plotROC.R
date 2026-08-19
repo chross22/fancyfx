@@ -222,7 +222,7 @@ plotThreshold <- function(model, newdata = NULL, folds = NULL,
   }
 
   if (length(metrics) <= length(palette)) {
-    p <- p + ggplot2::scale_colour_manual(values = palette[seq_len(length(metrics))])
+    p <- p + ggplot2::scale_colour_manual(values = palette[seq_along(metrics)])
   }
 
   if (mark.best && "tss" %in% metrics) {

@@ -7,3 +7,4 @@
 ^\.Rhistory$
 ^DECISIONS\.md$
 ^CITATION\.cff$
+^\.lintr$
