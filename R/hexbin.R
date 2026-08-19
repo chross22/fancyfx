@@ -288,11 +288,6 @@ hex_summariser <- function(fun) {
          count = length)
 }
 
-#' Fallback for a missing value
-#' @keywords internal
-#' @noRd
-`%||%` <- function(a, b) if (is.null(a)) b else a
-
 #' Map values aggregated into hexagonal bins
 #'
 #' Draws the output of [hex_bin()]. Useful for showing survey effort or catch
