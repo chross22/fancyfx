@@ -122,3 +122,49 @@ check_level <- function(level) {
   }
   level
 }
+
+#' Warn about an argument in `...` that looks like a misspelled formal
+#'
+#' `...` legitimately carries arguments through to the modelling backends, so
+#' unknown names cannot simply be refused. But that makes a typo silent: a
+#' misspelled `rug.type` is passed to `gratia`, ignored there, and the plot
+#' comes back with the default rug and no complaint. This catches the case that
+#' matters -- a name that is almost certainly a formal argument spelled wrong --
+#' while leaving genuine backend arguments alone.
+#'
+#' Matching is deliberately tight. A name qualifies only if, ignoring case and
+#' any dots or underscores, it either equals a formal argument exactly or is one
+#' character away from one. Anything looser would start flagging real backend
+#' arguments.
+#'
+#' @param dots.names Names of the arguments captured by `...`.
+#' @param formals.names Formal argument names of the calling function.
+#' @return Invisibly `NULL`, called for its side effect.
+#' @keywords internal
+warn_misspelled_dots <- function(dots.names, formals.names) {
+  dots.names <- dots.names[nzchar(dots.names)]
+  if (!length(dots.names)) return(invisible(NULL))
+
+  simplify <- function(x) tolower(gsub("[._]", "", x))
+  candidates <- setdiff(formals.names, c("...", dots.names))
+  simple.candidates <- simplify(candidates)
+
+  for (given in dots.names) {
+    simple.given <- simplify(given)
+    exact <- candidates[simple.candidates == simple.given]
+    near <- if (length(exact) || nchar(simple.given) < 4) {
+      character(0)
+    } else {
+      distance <- as.vector(utils::adist(simple.given, simple.candidates))
+      candidates[distance == 1]
+    }
+
+    suggestion <- c(exact, near)[1]
+    if (!is.na(suggestion)) {
+      warning("'", given, "' is not an argument of this function and was ",
+              "passed to the modelling backend, which ignored it. ",
+              "Did you mean '", suggestion, "'?", call. = FALSE)
+    }
+  }
+  invisible(NULL)
+}

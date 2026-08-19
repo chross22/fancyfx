@@ -40,6 +40,33 @@ Alongside the effect plots are **model evaluation plots** — ROC/AUC, the
 TSS-versus-threshold trade-off, and permutation importance — which ask whether
 the model earns the effects it reports.
 
+## Which function do I want?
+
+| I want to… | Use |
+|---|---|
+| plot one predictor's effect | `plotEffects()` |
+| plot several predictors | `combinePlots()` |
+| compare competing models | `comparePlots()` |
+| get the effect numbers, not a plot | `effect_estimates()` |
+| draw a rug on its own | `plotRugs()` |
+| **evaluate a presence/absence model** | |
+| how well does it rank? | `plotROC()` |
+| where should the cutoff go? | `plotThreshold()` |
+| are the probabilities honest? | `plotCalibration()` |
+| which predictors is it using? | `plotImportance()` |
+| how much deviance is explained? | `calc_deviance()` |
+| is my hold-out actually independent? | `spatial_sorting_bias()` |
+| score predictions I already have (CV) | `held_out()` |
+| **spatial projections** | |
+| where does the ensemble disagree? | `plotUncertainty()` |
+| where is it extrapolating? | `plotExtrapolation()` |
+| aggregate to a defensible resolution | `plotHexbin()` / `hex_bin()` |
+| thin records clustered by survey effort | `thin_points()` |
+| do two distributions overlap? | `niche_overlap()` / `niche_equivalency()` |
+| **make it publication-ready** | |
+| change the theme or font sizes | `theme_fancyfx()` |
+| change the curve colours | `fancyfx_palette()` |
+
 ## Installation
 
 You can install the development version of fancyfx from

@@ -58,6 +58,10 @@ combinePlots <- function(model, dat, vars, title = "",
                          title.size = 14,
                          common.legend = TRUE,
                          ...) {
+  # A misspelled formal would otherwise be swallowed by ... and passed to a
+  # backend that ignores it, leaving no sign the request was dropped.
+  warn_misspelled_dots(names(list(...)), names(formals()))
+
 
   rug.type <- check_choice(rug.type, c("histogram", "density"), "type")
   scale <- check_scale(scale)

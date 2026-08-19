@@ -58,6 +58,10 @@ plotROC <- function(model, newdata = NULL, folds = NULL, title = "",
                     palette = fancyfx_palette(),
                     linewidth = 0.8,
                     ...) {
+  # A misspelled formal would otherwise be swallowed by ... and passed to a
+  # backend that ignores it, leaving no sign the request was dropped.
+  warn_misspelled_dots(names(list(...)), names(formals()))
+
 
   metrics <- threshold_metrics(model, newdata, folds = folds, ...)
   grouped <- ".fold" %in% names(metrics)
@@ -175,6 +179,10 @@ plotThreshold <- function(model, newdata = NULL, folds = NULL,
                           palette = fancyfx_palette(),
                           linewidth = 0.8,
                           ...) {
+  # A misspelled formal would otherwise be swallowed by ... and passed to a
+  # backend that ignores it, leaving no sign the request was dropped.
+  warn_misspelled_dots(names(list(...)), names(formals()))
+
 
   allowed <- c("tss", "sensitivity", "specificity")
   metrics <- unique(metrics)

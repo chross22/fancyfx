@@ -71,6 +71,10 @@
 calibration_estimates <- function(model, newdata = NULL, bins = 10,
                                   binning = c("quantile", "width"),
                                   folds = NULL, level = 0.95, ...) {
+  # A misspelled formal would otherwise be swallowed by ... and passed to a
+  # backend that ignores it, leaving no sign the request was dropped.
+  warn_misspelled_dots(names(list(...)), names(formals()))
+
   supplied <- inherits(model, "fancyfx_held_out")
   if (!supplied && (missing(newdata) || is.null(newdata))) {
     stop("newdata is required: a model scored against the data it was fitted ",
@@ -267,6 +271,10 @@ plotCalibration <- function(model, newdata = NULL, bins = 10,
                             palette = fancyfx_palette(),
                             colour = fancyfx_palette(1),
                             ...) {
+  # A misspelled formal would otherwise be swallowed by ... and passed to a
+  # backend that ignores it, leaving no sign the request was dropped.
+  warn_misspelled_dots(names(list(...)), names(formals()))
+
 
   rug.type <- check_choice(rug.type, c("histogram", "density"), "type")
 

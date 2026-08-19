@@ -227,6 +227,75 @@ niche_equivalency <- function(occurrence.x, occurrence.y, fit, n.rep = 99,
   # 1 / (n.rep + 1), and reporting less than that would be false precision.
   p.value <- (sum(null.distribution <= observed) + 1) / (n.rep + 1)
 
-  list(observed = unname(observed), null = null.distribution,
-       p.value = p.value, statistic = statistic, n.rep = n.rep)
+  structure(
+    list(observed = unname(observed), null = null.distribution,
+         p.value = p.value, statistic = statistic, n.rep = n.rep),
+    class = "fancyfx_equivalency")
+}
+
+#' @export
+print.fancyfx_equivalency <- function(x, ...) {
+  cat("Niche equivalency test\n")
+  cat("  statistic  ", x$statistic, "\n", sep = "")
+  cat("  observed   ", format(round(x$observed, 4), nsmall = 4), "\n", sep = "")
+  cat("  null median", format(round(stats::median(x$null), 4), nsmall = 4),
+      "\n", sep = " ")
+  cat("  p-value    ", format(round(x$p.value, 4), nsmall = 4),
+      " (", x$n.rep, " randomisations)\n", sep = "")
+  cat("\nObserved below the null means the two groups occupy measurably\n",
+      "different environments. Inside it means the data cannot tell them\n",
+      "apart, which is not the same as showing they are the same.\n", sep = "")
+  invisible(x)
+}
+
+#' Plot a niche equivalency test against its null
+#'
+#' The observed overlap on its own says little -- two surfaces built from the
+#' same covariates over the same domain overlap substantially whatever the
+#' species do. What makes it readable is seeing it against the distribution of
+#' overlaps that interchangeable occurrences would have produced.
+#'
+#' @param x A result from [niche_equivalency()].
+#' @param title Plot title, optional.
+#' @param bins Number of histogram bins for the null distribution.
+#' @param theme A \pkg{ggplot2} theme. Defaults to [theme_fancyfx()].
+#' @param colour Colour of the observed-value line.
+#' @param ... Ignored.
+#'
+#' @return A \pkg{ggplot2} object.
+#'
+#' @family spatial plots
+#' @seealso [niche_equivalency()] for the test itself.
+#'
+#' @examples
+#' set.seed(1)
+#' grid <- seq(0, 20, length.out = 50)
+#' fit_density <- function(o) stats::dnorm(grid, mean(o$temp), stats::sd(o$temp))
+#'
+#' result <- niche_equivalency(data.frame(temp = rnorm(60, 8, 1.5)),
+#'                             data.frame(temp = rnorm(60, 14, 1.5)),
+#'                             fit_density, n.rep = 19)
+#' plot(result)
+#'
+#' @export
+plot.fancyfx_equivalency <- function(x, title = "", bins = 20,
+                                     theme = theme_fancyfx(),
+                                     colour = fancyfx_palette(1), ...) {
+  null.frame <- data.frame(.overlap = x$null)
+
+  ggplot2::ggplot(null.frame, ggplot2::aes(x = .data$.overlap)) +
+    ggplot2::geom_histogram(bins = bins, fill = "grey70", colour = NA) +
+    ggplot2::geom_vline(xintercept = x$observed, colour = colour,
+                        linewidth = 1) +
+    ggplot2::annotate("text", x = x$observed, y = Inf, hjust = -0.1,
+                      vjust = 1.5, colour = colour,
+                      label = paste0("observed = ",
+                                     format(round(x$observed, 3), nsmall = 3))) +
+    ggplot2::labs(
+      x = paste0("Overlap (", x$statistic, ") under interchangeable occurrences"),
+      y = "Randomisations",
+      title = if (nzchar(title)) title else NULL,
+      caption = paste0("p = ", format(round(x$p.value, 4), nsmall = 4),
+                       " from ", x$n.rep, " randomisations")) +
+    theme
 }

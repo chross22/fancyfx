@@ -87,6 +87,10 @@ comparePlots <- function(models, dat, var, title = "",
                          label.size = 14,
                          title.size = 14,
                          ...) {
+  # A misspelled formal would otherwise be swallowed by ... and passed to a
+  # backend that ignores it, leaving no sign the request was dropped.
+  warn_misspelled_dots(names(list(...)), names(formals()))
+
 
   # A single model is a comparison of one: degenerate, but harmless, and more
   # useful than refusing it inside a loop over specifications.

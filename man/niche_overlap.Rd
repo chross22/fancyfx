@@ -68,6 +68,7 @@ Other spatial plots:
 \code{\link[=hex_bin]{hex_bin()}},
 \code{\link[=mess]{mess()}},
 \code{\link[=niche_equivalency]{niche_equivalency()}},
+\code{\link[=plot.fancyfx_equivalency]{plot.fancyfx_equivalency()}},
 \code{\link[=plotExtrapolation]{plotExtrapolation()}},
 \code{\link[=plotHexbin]{plotHexbin()}},
 \code{\link[=plotUncertainty]{plotUncertainty()}},

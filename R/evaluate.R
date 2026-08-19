@@ -79,6 +79,10 @@
 #'
 #' @export
 threshold_metrics <- function(model, newdata, folds = NULL, ...) {
+  # A misspelled formal would otherwise be swallowed by ... and passed to a
+  # backend that ignores it, leaving no sign the request was dropped.
+  warn_misspelled_dots(names(list(...)), names(formals()))
+
   supplied <- inherits(model, "fancyfx_held_out")
   if (!supplied && (missing(newdata) || is.null(newdata))) {
     stop("newdata is required: a model scored against the data it was fitted ",

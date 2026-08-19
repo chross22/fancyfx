@@ -74,6 +74,7 @@ Other spatial plots:
 \code{\link[=mess]{mess()}},
 \code{\link[=niche_equivalency]{niche_equivalency()}},
 \code{\link[=niche_overlap]{niche_overlap()}},
+\code{\link[=plot.fancyfx_equivalency]{plot.fancyfx_equivalency()}},
 \code{\link[=plotExtrapolation]{plotExtrapolation()}},
 \code{\link[=plotHexbin]{plotHexbin()}},
 \code{\link[=plotUncertainty]{plotUncertainty()}}

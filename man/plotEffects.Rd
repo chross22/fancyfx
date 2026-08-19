@@ -10,6 +10,7 @@ plotEffects(
   var,
   xlab = var,
   ylab = NULL,
+  title = "",
   scale = c("auto", "link", "response"),
   interval = c("auto", "se", "ci", "cri"),
   level = 0.95,
@@ -40,6 +41,10 @@ applicable. Defaults to the variable's own name.}
 
 \item{ylab}{Label for the y-axis. Defaults to naming whichever quantity was
 actually computed -- \code{"Partial Effect"} or \code{"Predicted Value"}.}
+
+\item{title}{Plot title, optional. Set on the effect panel rather than the
+stacked figure, so it sits with the curve it describes rather than above
+the rug.}
 
 \item{scale}{\code{"auto"} (the default), \code{"link"}, or \code{"response"}. \code{"auto"}
 gives a GAM its partial effect on the link scale and every other model its

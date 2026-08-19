@@ -67,6 +67,10 @@ permutation_importance <- function(model, newdata, vars = NULL,
                                    metric = c("auto", "auc", "rmse"),
                                    seed = 1,
                                    ...) {
+  # A misspelled formal would otherwise be swallowed by ... and passed to a
+  # backend that ignores it, leaving no sign the request was dropped.
+  warn_misspelled_dots(names(list(...)), names(formals()))
+
   if (missing(newdata) || is.null(newdata)) {
     stop("newdata is required: importance measured on the data the model was ",
          "fitted to rewards a variable for the overfitting it enabled.",
@@ -203,6 +207,10 @@ plotImportance <- function(model, newdata, vars = NULL, n.perm = 10,
                            theme = theme_fancyfx(),
                            colour = fancyfx_palette(1),
                            ...) {
+  # A misspelled formal would otherwise be swallowed by ... and passed to a
+  # backend that ignores it, leaving no sign the request was dropped.
+  warn_misspelled_dots(names(list(...)), names(formals()))
+
 
   imp <- permutation_importance(model, newdata, vars = vars, n.perm = n.perm,
                                 metric = metric, seed = seed, ...)

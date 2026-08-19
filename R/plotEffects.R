@@ -16,6 +16,9 @@
 #'   applicable. Defaults to the variable's own name.
 #' @param ylab Label for the y-axis. Defaults to naming whichever quantity was
 #'   actually computed -- `"Partial Effect"` or `"Predicted Value"`.
+#' @param title Plot title, optional. Set on the effect panel rather than the
+#'   stacked figure, so it sits with the curve it describes rather than above
+#'   the rug.
 #' @param scale `"auto"` (the default), `"link"`, or `"response"`. `"auto"`
 #'   gives a GAM its partial effect on the link scale and every other model its
 #'   predictions on the response scale. For a GAM this argument chooses between
@@ -134,7 +137,7 @@
 #'             interval = "ci", rug.type = "density")
 #'
 #' @export
-plotEffects <- function(model, dat, var, xlab = var, ylab = NULL,
+plotEffects <- function(model, dat, var, xlab = var, ylab = NULL, title = "",
                         scale = c("auto", "link", "response"),
                         interval = c("auto", "se", "ci", "cri"),
                         level = 0.95,
@@ -147,6 +150,10 @@ plotEffects <- function(model, dat, var, xlab = var, ylab = NULL,
                         palette = fancyfx_palette(),
                         linewidth = 0.8,
                         ...) {
+  # A misspelled formal would otherwise be swallowed by ... and passed to a
+  # backend that ignores it, leaving no sign the request was dropped.
+  warn_misspelled_dots(names(list(...)), names(formals()))
+
 
   transform <- check_transform(transform)
   rug.type <- check_choice(rug.type, c("histogram", "density"), "type")
@@ -191,7 +198,8 @@ plotEffects <- function(model, dat, var, xlab = var, ylab = NULL,
     ggplot2::geom_ribbon(mapping = ribbon.aes, alpha = 0.25, colour = NA) +
     ggplot2::geom_line(linewidth = linewidth) +
     ggplot2::labs(x = xlab, y = ylab,
-                  colour = group.lab, fill = group.lab) +
+                  colour = group.lab, fill = group.lab,
+                  title = if (nzchar(title)) title else NULL) +
     theme
 
   if (grouped) {
