@@ -59,7 +59,7 @@ Suggests:
     testthat (>= 3.0.0),
     yardstick
 VignetteBuilder: knitr
-URL: https://github.com/chross22/fancyfx
+URL: https://github.com/chross22/fancyfx, https://camilleross.org/fancyfx/
 BugReports: https://github.com/chross22/fancyfx/issues
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.0
