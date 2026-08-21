@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">fancyfx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -386,6 +386,17 @@
 <div class="section level3">
 <h3 id="the-density-rug-was-a-bare-outline">The density rug was a bare outline<a class="anchor" aria-label="anchor" href="#the-density-rug-was-a-bare-outline"></a></h3>
 <p><code>geom_density()</code> takes no fill unless told, and <code>alpha</code> does nothing to an unfilled shape — so the density rug read as far lighter than the histogram it substitutes for.</p>
+</div>
+<div class="section level3">
+<h3 id="a-gams-effect-was-evaluated-at-its-data-not-on-a-grid">A GAM’s effect was evaluated at its data, not on a grid<a class="anchor" aria-label="anchor" href="#a-gams-effect-was-evaluated-at-its-data-not-on-a-grid"></a></h3>
+<p><code><a href="reference/plotEffects.html">plotEffects()</a></code> takes the raw data as its second argument, for the rug. That argument was also forwarded to <code><a href="https://gavinsimpson.github.io/gratia/reference/smooth_estimates.html" class="external-link">gratia::smooth_estimates()</a></code> as <code>data =</code>, which is not where the range comes from – it is where the smooth is <em>evaluated</em>. So every GAM curve this package drew was evaluated at every observed row rather than at the <code>n</code> points asked for, and <code>n</code> had no effect on a GAM at all. On a model fitted to 8,622 segments that is a polyline through 8,622 points where a hundred were requested.</p>
+<p><code>data</code> is documented as the fall-back for models that do not keep what they were fitted on – a <code>gbm</code> – and a GAM always keeps its model frame, so it is now dropped before the call and <code>n</code> is passed instead.</p>
+</div>
+<div class="section level3">
+<h3 id="a-smooth-of-a-transformed-term-could-not-be-drawn-at-all">A smooth of a transformed term could not be drawn at all<a class="anchor" aria-label="anchor" href="#a-smooth-of-a-transformed-term-could-not-be-drawn-at-all"></a></h3>
+<p><code>s(log10(depth))</code> is an ordinary thing to fit and it failed three ways at once. <code>gratia</code> handled the term correctly on its own but not through the <code>data =</code> path above, where it looked for a column literally named <code>log10(depth)</code>. The word-boundary filter on smooth labels built its pattern by pasting the term into a regex, so the parentheses became a capture group and the pattern searched for <code>log10depth</code> – reporting a smooth as absent that <code>gratia</code> had just returned. And <code>\b</code> cannot hold after a closing parenthesis anyway, since the next character inside <code>s(log10(depth))</code> is another one. The term is now escaped and the boundaries are applied only at edges that are word characters, which is the case they were protecting.</p>
+<p>The rug had the same shape of problem from the other end: <code>.data[[var]]</code> can only look a column up. The term is now evaluated in the data – in the data frame alone, with no enclosing environment, so a term naming a column that is absent cannot silently pick up a variable of the same name from the caller and draw a rug of something else.</p>
+<p>Found while plotting a density surface fitted with <code>s(log10(DEPTH))</code>.</p>
 </div>
 <div class="section level3">
 <h3 id="combineplots-hardcoded-partial-effect">

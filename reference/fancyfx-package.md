@@ -178,6 +178,8 @@ Useful links:
 
 - <https://github.com/chross22/fancyfx>
 
+- <https://camilleross.org/fancyfx/>
+
 - Report bugs at <https://github.com/chross22/fancyfx/issues>
 
 ## Author

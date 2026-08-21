@@ -6,7 +6,16 @@ classes cannot drift apart in what they compute or how they fail.
 ## Usage
 
 ``` r
-partial_effect(model, var, interval, level, nsim = 10000, seed = 1, ...)
+partial_effect(
+  model,
+  var,
+  interval,
+  level,
+  n = 100,
+  nsim = 10000,
+  seed = 1,
+  ...
+)
 ```
 
 ## Arguments
@@ -27,10 +36,15 @@ partial_effect(model, var, interval, level, nsim = 10000, seed = 1, ...)
 
   Interval level.
 
+- n:
+
+  Number of points to evaluate the smooth at.
+
 - ...:
 
   Passed to
-  [`gratia::smooth_estimates()`](https://gavinsimpson.github.io/gratia/reference/smooth_estimates.html).
+  [`gratia::smooth_estimates()`](https://gavinsimpson.github.io/gratia/reference/smooth_estimates.html),
+  less `data`; see below.
 
 ## Value
 

@@ -604,6 +604,45 @@ surfaced later as “no fold contains both classes”. Now validated against
 an unfilled shape — so the density rug read as far lighter than the
 histogram it substitutes for.
 
+### A GAM’s effect was evaluated at its data, not on a grid
+
+[`plotEffects()`](https://camilleross.org/fancyfx/reference/plotEffects.md)
+takes the raw data as its second argument, for the rug. That argument
+was also forwarded to
+[`gratia::smooth_estimates()`](https://gavinsimpson.github.io/gratia/reference/smooth_estimates.html)
+as `data =`, which is not where the range comes from – it is where the
+smooth is *evaluated*. So every GAM curve this package drew was
+evaluated at every observed row rather than at the `n` points asked for,
+and `n` had no effect on a GAM at all. On a model fitted to 8,622
+segments that is a polyline through 8,622 points where a hundred were
+requested.
+
+`data` is documented as the fall-back for models that do not keep what
+they were fitted on – a `gbm` – and a GAM always keeps its model frame,
+so it is now dropped before the call and `n` is passed instead.
+
+### A smooth of a transformed term could not be drawn at all
+
+`s(log10(depth))` is an ordinary thing to fit and it failed three ways
+at once. `gratia` handled the term correctly on its own but not through
+the `data =` path above, where it looked for a column literally named
+`log10(depth)`. The word-boundary filter on smooth labels built its
+pattern by pasting the term into a regex, so the parentheses became a
+capture group and the pattern searched for `log10depth` – reporting a
+smooth as absent that `gratia` had just returned. And `\b` cannot hold
+after a closing parenthesis anyway, since the next character inside
+`s(log10(depth))` is another one. The term is now escaped and the
+boundaries are applied only at edges that are word characters, which is
+the case they were protecting.
+
+The rug had the same shape of problem from the other end: `.data[[var]]`
+can only look a column up. The term is now evaluated in the data – in
+the data frame alone, with no enclosing environment, so a term naming a
+column that is absent cannot silently pick up a variable of the same
+name from the caller and draw a rug of something else.
+
+Found while plotting a density surface fitted with `s(log10(DEPTH))`.
+
 ### `combinePlots()` hardcoded “Partial Effect”
 
 Which would be wrong for every model reporting predictions.
