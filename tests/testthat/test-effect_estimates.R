@@ -255,3 +255,29 @@ test_that("simultaneous bands work for factor smooths and reach the plot", {
   expect_s3_class(plotEffects(model, d, "x", interval = "simultaneous"),
                   "patchwork")
 })
+
+# `data` reaches this package for models that do not keep what they were
+# fitted on. A GAM always keeps its model frame, and forwarding the argument to
+# gratia changed what was computed rather than merely where the range came
+# from - so both of these guard the same fix from opposite sides.
+test_that("n sets the resolution of a GAM's effect, rather than the data doing it", {
+  fit <- make_test_gam()
+  dat <- test_data()
+
+  expect_equal(nrow(effect_estimates(fit, "x1", data = dat, n = 100)), 100)
+  expect_equal(nrow(effect_estimates(fit, "x1", data = dat, n = 25)), 25)
+  # Without `data` too, so the two paths cannot drift apart.
+  expect_equal(nrow(effect_estimates(fit, "x1", n = 25)), 25)
+})
+
+test_that("a smooth of a transformed term is found, with or without data", {
+  dat <- test_data()
+  fit <- mgcv::gam(y ~ s(log10(x1)) + s(x2), data = dat)
+
+  # gratia handles the term on its own and fails when handed raw data, which
+  # is why `data` is dropped before the call rather than passed through.
+  est <- effect_estimates(fit, "log10(x1)", data = dat, n = 20)
+  expect_equal(nrow(est), 20)
+  expect_true(all(is.finite(est$.estimate)))
+  expect_equal(range(est$.x), range(log10(dat$x1)), tolerance = 0.05)
+})

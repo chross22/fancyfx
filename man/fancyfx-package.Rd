@@ -132,6 +132,7 @@ statistical models using marginaleffects for R and Python.
 Useful links:
 \itemize{
   \item \url{https://github.com/chross22/fancyfx}
+  \item \url{https://camilleross.org/fancyfx/}
   \item Report bugs at \url{https://github.com/chross22/fancyfx/issues}
 }
 

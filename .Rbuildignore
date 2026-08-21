@@ -8,3 +8,6 @@
 ^DECISIONS\.md$
 ^CITATION\.cff$
 ^\.lintr$
+^_pkgdown\.yml$
+^pkgdown$
+^pkgdown-site$

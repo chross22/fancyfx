@@ -110,7 +110,7 @@ effect_estimates.gam <- function(model, var,
     return(NextMethod())
   }
 
-  partial_effect(model, var, interval, level, ...)
+  partial_effect(model, var, interval, level, n = n, ...)
 }
 
 #' @rdname effect_estimates
@@ -136,7 +136,7 @@ effect_estimates.scam <- function(model, var,
     return(NextMethod())
   }
 
-  partial_effect(model, var, interval, level, ...)
+  partial_effect(model, var, interval, level, n = n, ...)
 }
 
 #' @rdname effect_estimates
@@ -160,21 +160,39 @@ effect_estimates.gamm <- function(model, var, ...) {
 #' @param var Name of the smoothed predictor.
 #' @param interval `"se"` or `"ci"` (already resolved).
 #' @param level Interval level.
-#' @param ... Passed to [gratia::smooth_estimates()].
+#' @param n Number of points to evaluate the smooth at.
+#' @param ... Passed to [gratia::smooth_estimates()], less `data`; see below.
 #' @return A standardized effect frame.
 #' @keywords internal
-partial_effect <- function(model, var, interval, level, nsim = 10000,
-                           seed = 1, ...) {
+partial_effect <- function(model, var, interval, level, n = 100,
+                           nsim = 10000, seed = 1, ...) {
   if (interval == "simultaneous") {
     return(simultaneous_effect(model, var, level, nsim, seed, ...))
   }
+
+  # `data` is dropped here, and dropping it is the point.
+  #
+  # It is documented as the fall-back for models that do not keep what they
+  # were fitted on -- a gbm, say -- and a GAM always keeps its model frame, so
+  # a GAM never needs it. Forwarded to `gratia::smooth_estimates()` it does two
+  # things, both wrong and both silent. It makes the smooth be evaluated at
+  # every observed row rather than on an `n`-point grid, so `n` had no effect
+  # on any GAM plot this package drew and a curve over 8,000 segments was a
+  # polyline through 8,000 points. And it breaks any smooth whose term is an
+  # expression -- `s(log10(depth))`, `s(I(x^2))` -- because gratia then looks
+  # for a column literally called `log10(depth)` in the frame it was handed and
+  # errors when it is not there. `smooth_estimates()` handles those terms
+  # correctly on its own; it is only the `data =` path that cannot.
+  dots <- list(...)
+  dots$data <- NULL
 
   # gratia raises its own error for a name it cannot match, and suggests
   # partial_match = TRUE -- advice that cannot help here, since we already pass
   # it. Say what is actually wrong and list what the model does offer.
   est <- tryCatch(
-    gratia::smooth_estimates(model, select = var, dist = 0.1,
-                             partial_match = TRUE, ...),
+    do.call(gratia::smooth_estimates,
+            c(list(model, select = var, n = n, dist = 0.1,
+                   partial_match = TRUE), dots)),
     error = function(e) {
       if (grepl("match any smooths", conditionMessage(e))) {
         available <- tryCatch(gratia::smooths(model), error = function(e) NULL)
@@ -285,7 +303,20 @@ smooth_labels <- function(model, var) {
   }
 
   # Word boundaries, so asking for "x" does not match a smooth of "x1".
-  matched <- available[grepl(paste0("\\b", var, "\\b"), available)]
+  #
+  # Escaped first, and the boundaries applied only where they can hold. A
+  # smooth's term is not always a bare name: `s(log10(depth))` has the term
+  # `log10(depth)`, whose parentheses are a regex capture group -- unescaped,
+  # the pattern searched for the literal "log10depth" and matched nothing, so
+  # a term that gratia had just returned was reported as absent. And `\b` after
+  # a closing parenthesis asserts a word character follows, which inside
+  # `s(log10(depth))` is another parenthesis, so a boundary there could never
+  # match either. Both sides are added only when the term's own edge is a word
+  # character, which is exactly the case the boundary was protecting.
+  esc <- gsub("([][(){}.^$|*+?\\\\])", "\\\\\\1", var)
+  left <- if (grepl("^\\w", var)) "\\b" else ""
+  right <- if (grepl("\\w$", var)) "\\b" else ""
+  matched <- available[grepl(paste0(left, esc, right), available)]
   if (!length(matched)) {
     stop("No smooth of '", var, "' found in the model (available: ",
          paste(available, collapse = ", "), ").", call. = FALSE)

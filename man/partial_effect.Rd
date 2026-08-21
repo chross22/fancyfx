@@ -4,7 +4,16 @@
 \alias{partial_effect}
 \title{The partial effect of a smooth, via gratia}
 \usage{
-partial_effect(model, var, interval, level, nsim = 10000, seed = 1, ...)
+partial_effect(
+  model,
+  var,
+  interval,
+  level,
+  n = 100,
+  nsim = 10000,
+  seed = 1,
+  ...
+)
 }
 \arguments{
 \item{model}{A fitted model gratia understands.}
@@ -15,7 +24,9 @@ partial_effect(model, var, interval, level, nsim = 10000, seed = 1, ...)
 
 \item{level}{Interval level.}
 
-\item{...}{Passed to \code{\link[gratia:smooth_estimates]{gratia::smooth_estimates()}}.}
+\item{n}{Number of points to evaluate the smooth at.}
+
+\item{...}{Passed to \code{\link[gratia:smooth_estimates]{gratia::smooth_estimates()}}, less \code{data}; see below.}
 }
 \value{
 A standardized effect frame.

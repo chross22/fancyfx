@@ -60,3 +60,27 @@ test_that("the histogram sets its bins rather than leaving them to a message", {
   expect_silent(p <- plotRugs(dat, "x", bins = 12))
   expect_equal(p$layers[[1]]$stat_params$bins, 12)
 })
+
+test_that("a rug can be drawn for a term that is not a column", {
+  dat <- data.frame(x = c(1, 10, 100))
+  p <- plotRugs(dat, "log10(x)")
+
+  # The evaluated term is carried under its own name, so the mapping is the
+  # same expression it would be for a plain column.
+  expect_equal(ggplot2::ggplot_build(p)$plot$data[["log10(x)"]], log10(dat$x))
+})
+
+test_that("a term that is neither a column nor evaluable says what the data has", {
+  dat <- data.frame(x = c(1, 2, 3))
+  expect_error(plotRugs(dat, "log10(depth)"), "neither a column")
+  expect_error(plotRugs(dat, "log10(depth)"), "x")
+})
+
+# Evaluated in the data alone. A term naming a column that is not there must
+# not pick up a variable of the same name from the caller and draw a rug of
+# something else that happens to be the right length.
+test_that("a rug term cannot reach out to the calling environment", {
+  dat <- data.frame(x = c(1, 2, 3))
+  depth <- c(10, 20, 30)
+  expect_error(plotRugs(dat, "log10(depth)"), "neither a column")
+})
