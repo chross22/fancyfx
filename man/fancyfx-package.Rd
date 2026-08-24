@@ -72,6 +72,33 @@ distributions overlap, and whether that is more than chance.}
 }
 
 See \code{vignette("spatial")}.
+
+These are statements about a MODEL -- is this cell inside the training
+range, how much do ensemble members disagree -- which is why they sit here
+beside the effect plots and the ROC curves rather than in the mapping
+package. What they are not is a general map-drawing layer: they take the
+defaults \code{ggplot2} gives them, and they draw no coastline, choose no
+projection and size no scale. For that, see \pkg{fancymaps} below.
+}
+
+\section{Sister package -- fancymaps}{
+
+\pkg{fancymaps} draws the maps: a predicted surface with land under it, a
+projection settled once, a colour scale chosen for the quantity rather than
+defaulted, and a value drawn beside its uncertainty as one figure. The two
+packages share a visual identity -- \code{fancymaps::theme_fancymap()} is
+\code{\link[=theme_fancyfx]{theme_fancyfx()}} with the axis furniture removed -- so an effect figure and
+a map figure from the same analysis read as one system.
+
+The split is by dependency load as much as by subject. Map rendering wants
+\pkg{sf} and a coastline source as hard imports, and someone who installed a
+package to plot a partial effect should not pay for GEOS. That is why
+\pkg{terra} is in \code{Suggests} here, and why the map side lives elsewhere.
+
+The dependency runs one way: \pkg{fancymaps} imports this package, and this
+one knows nothing about it. It reuses \code{\link[=hex_bin]{hex_bin()}} for overplotted point
+maps, and \code{\link[=mess]{mess()}} is a common thing to hand to
+\code{fancymaps::map_diverging()}.
 }
 
 \section{Diagnostics for spatial validation}{
@@ -129,13 +156,8 @@ statistical models using marginaleffects for R and Python.
 \doi{10.18637/jss.v111.i09}
 }
 \seealso{
-Useful links:
-\itemize{
-  \item \url{https://github.com/chross22/fancyfx}
-  \item \url{https://camilleross.org/fancyfx/}
-  \item Report bugs at \url{https://github.com/chross22/fancyfx/issues}
-}
-
+\pkg{fancymaps} at \url{https://github.com/chross22/fancymaps}, which
+draws the maps these projections go on.
 }
 \author{
 \strong{Maintainer}: Camille Ross \email{camille.ross@maine.edu} (\href{https://orcid.org/0000-0002-1428-2294}{ORCID})

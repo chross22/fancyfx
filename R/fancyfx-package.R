@@ -61,6 +61,31 @@
 #'
 #' See `vignette("spatial")`.
 #'
+#' These are statements about a MODEL -- is this cell inside the training
+#' range, how much do ensemble members disagree -- which is why they sit here
+#' beside the effect plots and the ROC curves rather than in the mapping
+#' package. What they are not is a general map-drawing layer: they take the
+#' defaults `ggplot2` gives them, and they draw no coastline, choose no
+#' projection and size no scale. For that, see \pkg{fancymaps} below.
+#'
+#' @section Sister package -- fancymaps:
+#' \pkg{fancymaps} draws the maps: a predicted surface with land under it, a
+#' projection settled once, a colour scale chosen for the quantity rather than
+#' defaulted, and a value drawn beside its uncertainty as one figure. The two
+#' packages share a visual identity -- `fancymaps::theme_fancymap()` is
+#' [theme_fancyfx()] with the axis furniture removed -- so an effect figure and
+#' a map figure from the same analysis read as one system.
+#'
+#' The split is by dependency load as much as by subject. Map rendering wants
+#' \pkg{sf} and a coastline source as hard imports, and someone who installed a
+#' package to plot a partial effect should not pay for GEOS. That is why
+#' \pkg{terra} is in `Suggests` here, and why the map side lives elsewhere.
+#'
+#' The dependency runs one way: \pkg{fancymaps} imports this package, and this
+#' one knows nothing about it. It reuses [hex_bin()] for overplotted point
+#' maps, and [mess()] is a common thing to hand to
+#' `fancymaps::map_diverging()`.
+#'
 #' @section Diagnostics for spatial validation:
 #' [spatial_sorting_bias()] measures how independent a train/test split really
 #' is -- whether the test presences sit closer to the training data than the
@@ -108,6 +133,9 @@
 #' statistical models using marginaleffects for R and Python.
 #' *Journal of Statistical Software*, 111(9), 1-32.
 #' \doi{10.18637/jss.v111.i09}
+#'
+#' @seealso \pkg{fancymaps} at <https://github.com/chross22/fancymaps>, which
+#'   draws the maps these projections go on.
 #'
 #' @keywords internal
 "_PACKAGE"
