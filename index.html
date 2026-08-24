@@ -473,9 +473,23 @@
 </table>
 </div>
 <div class="section level2">
+<h2 id="sister-package-fancymaps">Sister package: fancymaps<a class="anchor" aria-label="anchor" href="#sister-package-fancymaps"></a>
+</h2>
+<p><a href="https://github.com/chross22/fancymaps" class="external-link"><code>fancymaps</code></a> is the map half of the pair. <code>fancyfx</code> says what a model claims and whether it has earned the claim; <code>fancymaps</code> draws where it says it — a predicted surface with land under it, a projection settled once, a colour scale chosen for the quantity rather than defaulted, and a value drawn beside its uncertainty as one figure rather than two that happen to be adjacent.</p>
+<p>The spatial diagnostics stay here, because <code><a href="reference/plotExtrapolation.html">plotExtrapolation()</a></code> and <code><a href="reference/plotUncertainty.html">plotUncertainty()</a></code> are statements about a <em>model</em> and belong beside the effect plots and the ROC curves. What they are not is a map-drawing layer: they take <code>ggplot2</code>’s defaults, and they draw no coastline, choose no projection and size no scale bar.</p>
+<p>The split is by dependency load as much as by subject. Map rendering wants <code>sf</code> and a coastline source as hard imports, and someone who installed a package to plot a partial effect should not pay for GEOS. The dependency runs one way — <code>fancymaps</code> imports <code>fancyfx</code> for <code><a href="reference/theme_fancyfx.html">theme_fancyfx()</a></code>, <code><a href="reference/fancyfx_palette.html">fancyfx_palette()</a></code> and <code><a href="reference/hex_bin.html">hex_bin()</a></code>, and <code>fancyfx</code> knows nothing about <code>fancymaps</code> — so the two share a visual identity without either being able to break the other.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">fancymaps</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># the same fitted surface fancyfx plots the effects of</span></span>
+<span><span class="fu">map_pair</span><span class="op">(</span><span class="va">grid</span>, <span class="st">"density"</span>, <span class="st">"mess"</span>,</span>
+<span>         uncertainty_kind <span class="op">=</span> <span class="st">"diverging"</span>, uncertainty_direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>,</span>
+<span>         labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"animals per km2"</span>, <span class="st">"MESS"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="how-to-cite">How to cite<a class="anchor" aria-label="anchor" href="#how-to-cite"></a>
 </h2>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fancyfx"</span><span class="op">)</span></span></code></pre></div>
 <p><code>fancyfx</code> is a plotting layer over other people’s estimation work. Please also cite whichever package computed your effects: <code>gratia</code> and <code>mgcv</code> for GAM partial effects, <code>marginaleffects</code> otherwise.</p>
 </div>

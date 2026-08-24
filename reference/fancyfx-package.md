@@ -110,6 +110,37 @@ project.
 See
 [`vignette("spatial")`](https://camilleross.org/fancyfx/articles/spatial.md).
 
+These are statements about a MODEL – is this cell inside the training
+range, how much do ensemble members disagree – which is why they sit
+here beside the effect plots and the ROC curves rather than in the
+mapping package. What they are not is a general map-drawing layer: they
+take the defaults `ggplot2` gives them, and they draw no coastline,
+choose no projection and size no scale. For that, see fancymaps below.
+
+## Sister package – fancymaps
+
+fancymaps draws the maps: a predicted surface with land under it, a
+projection settled once, a colour scale chosen for the quantity rather
+than defaulted, and a value drawn beside its uncertainty as one figure.
+The two packages share a visual identity – `fancymaps::theme_fancymap()`
+is
+[`theme_fancyfx()`](https://camilleross.org/fancyfx/reference/theme_fancyfx.md)
+with the axis furniture removed – so an effect figure and a map figure
+from the same analysis read as one system.
+
+The split is by dependency load as much as by subject. Map rendering
+wants sf and a coastline source as hard imports, and someone who
+installed a package to plot a partial effect should not pay for GEOS.
+That is why terra is in `Suggests` here, and why the map side lives
+elsewhere.
+
+The dependency runs one way: fancymaps imports this package, and this
+one knows nothing about it. It reuses
+[`hex_bin()`](https://camilleross.org/fancyfx/reference/hex_bin.md) for
+overplotted point maps, and
+[`mess()`](https://camilleross.org/fancyfx/reference/mess.md) is a
+common thing to hand to `fancymaps::map_diverging()`.
+
 ## Diagnostics for spatial validation
 
 [`spatial_sorting_bias()`](https://camilleross.org/fancyfx/reference/spatial_sorting_bias.md)
@@ -174,13 +205,8 @@ Statistical Software*, 111(9), 1-32.
 
 ## See also
 
-Useful links:
-
-- <https://github.com/chross22/fancyfx>
-
-- <https://camilleross.org/fancyfx/>
-
-- Report bugs at <https://github.com/chross22/fancyfx/issues>
+fancymaps at <https://github.com/chross22/fancymaps>, which draws the
+maps these projections go on.
 
 ## Author
 

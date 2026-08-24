@@ -435,6 +435,44 @@ without hunting through help pages.
 | [Evaluating a model](https://camilleross.org/fancyfx/vignettes/evaluation.Rmd) | ROC, thresholds, calibration, deviance, importance |
 | [Spatial projections](https://camilleross.org/fancyfx/vignettes/spatial.Rmd) | uncertainty and extrapolation maps, hexbins, thinning |
 
+## Sister package: fancymaps
+
+[`fancymaps`](https://github.com/chross22/fancymaps) is the map half of
+the pair. `fancyfx` says what a model claims and whether it has earned
+the claim; `fancymaps` draws where it says it — a predicted surface with
+land under it, a projection settled once, a colour scale chosen for the
+quantity rather than defaulted, and a value drawn beside its uncertainty
+as one figure rather than two that happen to be adjacent.
+
+The spatial diagnostics stay here, because
+[`plotExtrapolation()`](https://camilleross.org/fancyfx/reference/plotExtrapolation.md)
+and
+[`plotUncertainty()`](https://camilleross.org/fancyfx/reference/plotUncertainty.md)
+are statements about a *model* and belong beside the effect plots and
+the ROC curves. What they are not is a map-drawing layer: they take
+`ggplot2`’s defaults, and they draw no coastline, choose no projection
+and size no scale bar.
+
+The split is by dependency load as much as by subject. Map rendering
+wants `sf` and a coastline source as hard imports, and someone who
+installed a package to plot a partial effect should not pay for GEOS.
+The dependency runs one way — `fancymaps` imports `fancyfx` for
+[`theme_fancyfx()`](https://camilleross.org/fancyfx/reference/theme_fancyfx.md),
+[`fancyfx_palette()`](https://camilleross.org/fancyfx/reference/fancyfx_palette.md)
+and [`hex_bin()`](https://camilleross.org/fancyfx/reference/hex_bin.md),
+and `fancyfx` knows nothing about `fancymaps` — so the two share a
+visual identity without either being able to break the other.
+
+``` r
+
+library(fancymaps)
+
+# the same fitted surface fancyfx plots the effects of
+map_pair(grid, "density", "mess",
+         uncertainty_kind = "diverging", uncertainty_direction = -1,
+         labels = c("animals per km2", "MESS"))
+```
+
 ## How to cite
 
 ``` r

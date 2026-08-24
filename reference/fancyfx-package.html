@@ -151,6 +151,31 @@ distributions overlap, and whether that is more than chance.</p></dd>
 
 
 </dl><p>See <code><a href="../articles/spatial.html">vignette("spatial")</a></code>.</p>
+<p>These are statements about a MODEL – is this cell inside the training
+range, how much do ensemble members disagree – which is why they sit here
+beside the effect plots and the ROC curves rather than in the mapping
+package. What they are not is a general map-drawing layer: they take the
+defaults <code>ggplot2</code> gives them, and they draw no coastline, choose no
+projection and size no scale. For that, see <span class="pkg">fancymaps</span> below.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="sister-package-fancymaps">Sister package – fancymaps<a class="anchor" aria-label="anchor" href="#sister-package-fancymaps"></a></h2>
+
+
+<p><span class="pkg">fancymaps</span> draws the maps: a predicted surface with land under it, a
+projection settled once, a colour scale chosen for the quantity rather than
+defaulted, and a value drawn beside its uncertainty as one figure. The two
+packages share a visual identity – <code>fancymaps::theme_fancymap()</code> is
+<code><a href="theme_fancyfx.html">theme_fancyfx()</a></code> with the axis furniture removed – so an effect figure and
+a map figure from the same analysis read as one system.</p>
+<p>The split is by dependency load as much as by subject. Map rendering wants
+<span class="pkg">sf</span> and a coastline source as hard imports, and someone who installed a
+package to plot a partial effect should not pay for GEOS. That is why
+<span class="pkg">terra</span> is in <code>Suggests</code> here, and why the map side lives elsewhere.</p>
+<p>The dependency runs one way: <span class="pkg">fancymaps</span> imports this package, and this
+one knows nothing about it. It reuses <code><a href="hex_bin.html">hex_bin()</a></code> for overplotted point
+maps, and <code><a href="mess.html">mess()</a></code> is a common thing to hand to
+<code>fancymaps::map_diverging()</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="diagnostics-for-spatial-validation">Diagnostics for spatial validation<a class="anchor" aria-label="anchor" href="#diagnostics-for-spatial-validation"></a></h2>
@@ -208,10 +233,8 @@ statistical models using marginaleffects for R and Python.
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p>Useful links:</p><ul><li><p><a href="https://github.com/chross22/fancyfx" class="external-link">https://github.com/chross22/fancyfx</a></p></li>
-<li><p><a href="https://camilleross.org/fancyfx/">https://camilleross.org/fancyfx/</a></p></li>
-<li><p>Report bugs at <a href="https://github.com/chross22/fancyfx/issues" class="external-link">https://github.com/chross22/fancyfx/issues</a></p></li>
-</ul></div>
+    <div class="dont-index"><p><span class="pkg">fancymaps</span> at <a href="https://github.com/chross22/fancymaps" class="external-link">https://github.com/chross22/fancymaps</a>, which
+draws the maps these projections go on.</p></div>
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
