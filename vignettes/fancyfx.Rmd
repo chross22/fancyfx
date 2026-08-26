@@ -140,9 +140,11 @@ plotEffects(by.species, iris, "Sepal.Length",
             xlab = "Sepal length (cm)")
 ```
 
-Note the rug is shared: it shows the distribution of `Sepal.Length` overall, not
-per species. A level with few observations will have a wide ribbon, which is the
-signal to look for.
+The rug is split by the same factor and drawn in the same colours, stacked so
+its outline is still the overall distribution of `Sepal.Length`. Each curve is
+fitted to one species' rows alone, so this is what says whether the stretch of
+x under a bend belongs to the curve you are reading -- a species with few
+observations there gets a thin band and a wide ribbon.
 
 ## Comparing models
 

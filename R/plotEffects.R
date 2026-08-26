@@ -90,7 +90,11 @@
 #'
 #' A **factor-smooth interaction**, `s(x, by = f)`, is one smooth per level of
 #' `f`. Those are drawn as separate coloured curves with a legend, rather than
-#' joined end to end into a single zigzagging line.
+#' joined end to end into a single zigzagging line. The rug above is split by
+#' the same factor and filled in the same colours, stacked so its outline is
+#' still the overall distribution: each curve is fitted to one level's rows
+#' alone, and an undivided rug would report the whole sample's evidence to all
+#' of them.
 #'
 #' For a **mixed model**, `re.form` defaults to `NA`, so the effect is drawn at
 #' the population level. This matters: left to the backend's own default, the
@@ -172,7 +176,11 @@ plotEffects <- function(model, dat, var, xlab = var, ylab = NULL, title = "",
   # They have to be told apart, or geom_line() joins the end of one level's
   # curve to the start of the next and draws a zigzag.
   grouped <- ".group" %in% names(est)
-  if (grouped && is.null(group.lab)) group.lab <- attr(est, "group.label")
+  # The factor's own name, kept apart from the legend title the caller may have
+  # overridden: it is the column the rug above has to be split by, and a rug
+  # split by "Treatment" when the data calls it "f" would find no such column.
+  group.var <- if (grouped) attr(est, "group.label") else NULL
+  if (grouped && is.null(group.lab)) group.lab <- group.var
 
   if (grouped) {
     base.aes <- ggplot2::aes(x = switch(transform,
@@ -202,6 +210,10 @@ plotEffects <- function(model, dat, var, xlab = var, ylab = NULL, title = "",
                   title = if (nzchar(title)) title else NULL) +
     theme
 
+  # Named by level, so the same vector colours the rug above: a rug band and
+  # the curve it belongs to are then the same colour by construction rather
+  # than by both happening to be the nth thing drawn.
+  pal <- NULL
   if (grouped) {
     levels.n <- nlevels(est$.group)
     if (levels.n > length(palette)) {
@@ -212,15 +224,24 @@ plotEffects <- function(model, dat, var, xlab = var, ylab = NULL, title = "",
               length(palette), " colours. Falling back to ggplot2's default ",
               "scale -- consider a facet per level instead.", call. = FALSE)
     } else {
-      pal <- palette[seq_len(levels.n)]
+      pal <- stats::setNames(palette[seq_len(levels.n)], levels(est$.group))
       var.plot <- var.plot +
         ggplot2::scale_colour_manual(values = pal) +
         ggplot2::scale_fill_manual(values = pal)
     }
   }
 
+  # Split by the same factor as the curves. Each curve is fitted to one level's
+  # data alone, so an undivided rug would report evidence to a curve that none
+  # of it belongs to -- a level with three observations under a stretch of x
+  # would look as well supported as the level with three hundred.
   rug.plot <- plotRugs(dat = dat, var = var, type = rug.type,
-                       transform = transform, bins = bins)
+                       transform = transform, bins = bins,
+                       group = group.var, palette = pal) +
+    # The legend belongs to the figure once, under the curves that carry the
+    # labels. Repeated over the rug it would also shrink the panel it sits in
+    # to a sliver.
+    ggplot2::theme(legend.position = "none")
 
   list(rug.plot, var.plot) |> patchwork::wrap_plots(nrow = 2, heights = c(1, 5))
 }

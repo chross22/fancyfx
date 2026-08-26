@@ -10,7 +10,9 @@ plotRugs(
   type = c("histogram", "density"),
   transform = c("none", "log", "log10", "sqrt"),
   bins = 30,
-  fill = "grey35"
+  fill = "grey35",
+  group = NULL,
+  palette = NULL
 )
 }
 \arguments{
@@ -28,7 +30,20 @@ about it on every plot. Ignored when \code{type} is \code{"density"}.}
 
 \item{fill}{Fill colour for the rug. Deliberately a neutral grey: the rug
 reports where the data is, and should not compete with the effect curve
-below it for attention.}
+below it for attention. Ignored when \code{group} splits the rug, which colours
+it by level instead.}
+
+\item{group}{Optional name of a factor column in \code{dat} to split the rug by,
+as a string. Under a factor-smooth interaction each curve is fitted to one
+level's data only, so an undivided rug reports evidence that does not
+belong to the curve the reader is looking at. Split, each level's share of
+the data is drawn in that level's own colour.}
+
+\item{palette}{Colours for the split, as a vector named by level -- the
+names are what tie a band of rug to its curve, so an unnamed vector is
+assigned in level order and a \code{NULL} leaves the scale to \pkg{ggplot2}.
+Levels the palette does not name are dropped from the rug rather than
+drawn in a colour that belongs to another curve.}
 }
 \value{
 The rug plot from dat for var
@@ -41,6 +56,10 @@ bend in a smooth can be read against how much evidence sits under it.
 plotRugs(iris, "Sepal.Length")
 plotRugs(iris, "Sepal.Length", type = "density")
 plotRugs(mtcars, "disp", transform = "log10", bins = 15)
+
+# Split by a factor, in the palette the effect curves use
+plotRugs(iris, "Sepal.Length", group = "Species",
+         palette = fancyfx_palette(3))
 
 }
 \seealso{

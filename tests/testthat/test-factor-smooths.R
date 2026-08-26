@@ -79,3 +79,46 @@ test_that("factor smooths survive the multi-panel wrappers", {
                  dat, "x")
   )
 })
+
+test_that("the rug is split by the same factor, in the curves' own colours", {
+  # An undivided rug hands every curve the whole sample's distribution, when
+  # each curve was fitted to one level's rows alone.
+  p <- plotEffects(make_factor_smooth_gam(), make_factor_smooth_data(), "x")
+
+  rug.fills <- unique(ggplot2::ggplot_build(p[[1]])$data[[1]]$fill)
+  curve.colours <- unique(ggplot2::ggplot_build(p[[2]])$data[[2]]$colour)
+  expect_setequal(rug.fills, curve.colours)
+  expect_setequal(rug.fills, fancyfx_palette(3))
+})
+
+test_that("a rug band carries the colour of the curve it belongs to", {
+  # Set equality alone would pass if the levels were colour-matched in the
+  # wrong order, so the levels are given disjoint stretches of x and each
+  # stretch is checked against the colour of its own level.
+  set.seed(3)
+  d <- data.frame(f = factor(rep(c("a", "b", "c"), each = 100)))
+  d$x <- c(runif(100, 1, 3), runif(100, 4, 6), runif(100, 7, 9))
+  d$y <- rnorm(300)
+  model <- mgcv::gam(y ~ s(x, by = f) + f, data = d)
+
+  built <- ggplot2::ggplot_build(plotEffects(model, d, "x")[[1]])$data[[1]]
+  built <- built[built$count > 0, ]
+  centres <- vapply(split(built$x, built$fill), mean, numeric(1))
+  pal <- fancyfx_palette(3)
+
+  # a lowest, b in the middle, c highest -- in palette order.
+  expect_equal(names(sort(centres)), pal)
+})
+
+test_that("the rug does not repeat the legend the curves already carry", {
+  p <- plotEffects(make_factor_smooth_gam(), make_factor_smooth_data(), "x")
+  expect_equal(p[[1]]$theme$legend.position, "none")
+})
+
+test_that("an ordinary smooth keeps its undivided grey rug", {
+  built <- ggplot2::ggplot_build(
+    plotEffects(make_test_gam(), test_data(), "x1")[[1]]
+  )$data[[1]]
+
+  expect_equal(unique(built$fill), "grey35")
+})

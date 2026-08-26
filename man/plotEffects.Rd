@@ -138,7 +138,11 @@ translation is handled for you.
 
 A \strong{factor-smooth interaction}, \code{s(x, by = f)}, is one smooth per level of
 \code{f}. Those are drawn as separate coloured curves with a legend, rather than
-joined end to end into a single zigzagging line.
+joined end to end into a single zigzagging line. The rug above is split by
+the same factor and filled in the same colours, stacked so its outline is
+still the overall distribution: each curve is fitted to one level's rows
+alone, and an undivided rug would report the whole sample's evidence to all
+of them.
 
 For a \strong{mixed model}, \code{re.form} defaults to \code{NA}, so the effect is drawn at
 the population level. This matters: left to the backend's own default, the

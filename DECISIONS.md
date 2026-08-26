@@ -447,6 +447,26 @@ is **17.9**.
 Past six colours the palette refuses to invent a hue and says to facet, because
 recycling would label two levels identically.
 
+### The rug under a factor smooth is split by the factor
+
+`s(x, by = f)` fits one smooth per level of `f`, each to that level's rows
+alone. An undivided rug reports the whole sample's distribution to every one of
+those curves, so a level with three observations under a stretch of x looks as
+well supported there as the level with three hundred -- the exact failure the
+rug exists to prevent.
+
+So the rug is split by the same factor and filled from the same palette, keyed
+by level name rather than by draw order, which is what makes a band and its
+curve the same colour by construction. The bands are **stacked**, not overlaid:
+the rug's outline stays the shape the undivided rug had, so nothing is lost,
+and a density rug is scaled to counts before stacking, since each level's
+density integrates to one on its own and raw stacking would draw the smallest
+level as tall a band as the largest.
+
+The legend is drawn once, under the curves. A level the effect panel did not
+draw is dropped from the rug rather than coloured in, which would attach it to
+a curve it has nothing to do with.
+
 ### Sequential for magnitude, diverging for polarity
 
 Uncertainty is a magnitude, so it gets a perceptually uniform viridis ramp. A
