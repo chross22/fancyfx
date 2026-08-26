@@ -12,7 +12,9 @@ plotRugs(
   type = c("histogram", "density"),
   transform = c("none", "log", "log10", "sqrt"),
   bins = 30,
-  fill = "grey35"
+  fill = "grey35",
+  group = NULL,
+  palette = NULL
 )
 ```
 
@@ -45,7 +47,24 @@ plotRugs(
 
   Fill colour for the rug. Deliberately a neutral grey: the rug reports
   where the data is, and should not compete with the effect curve below
-  it for attention.
+  it for attention. Ignored when `group` splits the rug, which colours
+  it by level instead.
+
+- group:
+
+  Optional name of a factor column in `dat` to split the rug by, as a
+  string. Under a factor-smooth interaction each curve is fitted to one
+  level's data only, so an undivided rug reports evidence that does not
+  belong to the curve the reader is looking at. Split, each level's
+  share of the data is drawn in that level's own colour.
+
+- palette:
+
+  Colours for the split, as a vector named by level – the names are what
+  tie a band of rug to its curve, so an unnamed vector is assigned in
+  level order and a `NULL` leaves the scale to ggplot2. Levels the
+  palette does not name are dropped from the rug rather than drawn in a
+  colour that belongs to another curve.
 
 ## Value
 
@@ -70,5 +89,10 @@ plotRugs(iris, "Sepal.Length")
 plotRugs(iris, "Sepal.Length", type = "density")
 
 plotRugs(mtcars, "disp", transform = "log10", bins = 15)
+
+
+# Split by a factor, in the palette the effect curves use
+plotRugs(iris, "Sepal.Length", group = "Species",
+         palette = fancyfx_palette(3))
 
 ```

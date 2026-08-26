@@ -221,7 +221,11 @@ same thing. <span class="pkg">brms</span> takes <code>re_formula</code> rather t
 translation is handled for you.</p>
 <p>A <strong>factor-smooth interaction</strong>, <code>s(x, by = f)</code>, is one smooth per level of
 <code>f</code>. Those are drawn as separate coloured curves with a legend, rather than
-joined end to end into a single zigzagging line.</p>
+joined end to end into a single zigzagging line. The rug above is split by
+the same factor and filled in the same colours, stacked so its outline is
+still the overall distribution: each curve is fitted to one level's rows
+alone, and an undivided rug would report the whole sample's evidence to all
+of them.</p>
 <p>For a <strong>mixed model</strong>, <code>re.form</code> defaults to <code>NA</code>, so the effect is drawn at
 the population level. This matters: left to the backend's own default, the
 grouping factor is held at its modal level and the plot silently shows the
