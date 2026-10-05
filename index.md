@@ -1,19 +1,14 @@
 # fancyfx
 
-An effect curve on its own is easy to over-interpret. A model could draw
-a confident-looking bend at the far right of the x axis, and nothing in
-the plot would tell you that only three observations sit under it.
-
-`fancyfx` pairs every effect curve with a rug of the raw data, drawn
-directly above it on a shared x axis, so the shape of the effect and the
-weight of evidence behind it get read together. Additionally, `fancyfx`
-returns manuscript ready figures without having to fiddle with settings.
-Defaults are chosen for publication rather than for exploration — a
-clean theme with no grid or background panel, lettered panel labels, and
-a categorical palette checked for legibility under colour vision
-deficiency — so a bare call gets you close to the figure you would
-submit. Every one of those is an argument, so a house style can replace
-any of them.
+`fancyfx` pairs every model effect curve with a rug of the raw data,
+drawn directly above it on a shared x axis, so the shape of the effect
+and the weight of evidence behind it get read together. Additionally,
+`fancyfx` returns manuscript ready figures automatically. Defaults are
+chosen for publication rather than for exploration — a clean theme with
+no grid or background panel, lettered panel labels, and a categorical
+palette checked for legibility under colour vision deficiency — so a
+bare call gets you close to the figure you would submit. Every one of
+those is an argument, so a house style can replace any of them.
 
 It works across model types: GAMs fitted with `mgcv` are shown as
 partial effects via `gratia`, and everything else — including mixed and

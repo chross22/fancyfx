@@ -25,7 +25,7 @@ covers the north-west.
 ``` r
 
 library(terra)
-#> terra 1.9.46
+#> terra 1.9.50
 
 set.seed(1)
 grid <- rast(nrows = 60, ncols = 80, xmin = -71, xmax = -65,
